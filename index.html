@@ -13,7 +13,6 @@
   <link rel="preconnect" href="https://server.arcgisonline.com">
 
   <script>
-    // Theme applied before paint so a saved light theme doesn't flash dark.
     (function() {
       try {
         if (localStorage.getItem('polradTheme_v1') === 'light') {
@@ -21,9 +20,6 @@
         }
       } catch (e) {}
     })();
-    // Device mode applied before Leaflet measures its container, same rationale
-    // as Playfra's own copy of this — a CSS-only width change the map never
-    // hears about otherwise.
     (function() {
       try {
         var saved = localStorage.getItem('polradDevice_v1');
@@ -68,8 +64,6 @@
     }
     #mapWrap > .leaflet-control-container{z-index:2;}
 
-    /* Crosshair — viewport-centered cross with an invisible clickable hotspot
-       that opens the coordinate lookup, same convention as Playfra's own. */
     #crosshair{position:absolute;top:50%;left:50%;width:0;height:0;z-index:2;display:none;pointer-events:none;}
     #crosshair.active{display:block;}
     .ch-line{position:absolute;background:var(--text);opacity:.6;box-shadow:0 0 2px #0008;}
@@ -100,20 +94,6 @@
     }
     :root[data-theme="light"] .view-only-badge{color:var(--accent);}
 
-    .toolbar{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px;}
-
-    button{
-      background:var(--panel2);color:var(--text);border:1px solid var(--border);
-      border-radius:var(--radius-sm);padding:7px 11px;font-size:12px;font-weight:500;cursor:pointer;
-      transition:background .12s,border-color .12s,color .12s;font-family:inherit;
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;
-    }
-    button svg{flex-shrink:0;}
-    button:hover{border-color:var(--accent-hover);background:var(--panel3);}
-    button.active-toggle{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
-    button.active-toggle:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
-    button.small{padding:5px 8px;font-size:11px;}
-
     .overlay-section{padding:10px 12px;border-bottom:1px solid var(--border);}
     .overlay-section h3{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);margin:0 0 8px;}
     .overlay-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:12px;}
@@ -135,9 +115,137 @@
     ::-webkit-scrollbar{width:8px;}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
-    /* Floating panels — anchored to the RIGHT side of the map so they sit
-       just left of the sidebar and never cover the map center. Draggable via
-       their own top handle; mutually exclusive via toggleTab(). */
+    /* Tool row — moved to the top-LEFT corner of the map. Horizontal layout. */
+    #toolRow{
+      position:fixed;top:14px;left:14px;z-index:1200;
+      display:flex;gap:6px;
+    }
+    button{
+      background:var(--panel2);color:var(--text);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:7px 11px;font-size:12px;font-weight:500;cursor:pointer;
+      transition:background .12s,border-color .12s,color .12s;font-family:inherit;
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    }
+    button svg{flex-shrink:0;}
+    button:hover{border-color:var(--accent-hover);background:var(--panel3);}
+    button.active-toggle{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+    button.active-toggle:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+
+    /* Snapshot panel — matches the screenshot's look. Anchored left-center. */
+    #snapshotPanel{
+      position:fixed;
+      left:14px;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:1200;
+      width:min(300px,calc(100vw - 28px));
+      display:none;
+      flex-direction:column;
+      gap:8px;
+      pointer-events:auto;
+    }
+    #snapshotPanel.open{display:flex;}
+
+    #snapshotDescBox{
+      background:#1a1f2b;
+      border:2px solid #2d5aed;
+      border-radius:10px;
+      padding:14px 16px;
+      min-height:120px;
+      color:#6b8cff;
+      font-family:ui-monospace,Consolas,monospace;
+      font-size:15px;
+      line-height:1.45;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+    }
+    #snapshotDescBox .snapshot-placeholder{
+      color:#6b8cff;
+      opacity:.85;
+    }
+    #snapshotDescBox .snapshot-meta{
+      display:block;
+      color:#8ba7ff;
+      font-size:11px;
+      margin-top:8px;
+      opacity:.7;
+    }
+
+    #snapshotNavRow{
+      display:flex;
+      gap:10px;
+      align-items:stretch;
+    }
+    .snapshot-nav-btn{
+      flex:1;
+      background:transparent;
+      border:2px solid #2d5aed;
+      border-radius:8px;
+      padding:8px 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#2d5aed;
+      font-size:26px;
+      line-height:1;
+      cursor:pointer;
+      transition:background .12s,border-color .12s,color .12s;
+      font-weight:400;
+      min-height:44px;
+    }
+    .snapshot-nav-btn:hover{
+      background:#2d5aed22;
+      border-color:#3f6fff;
+      color:#3f6fff;
+    }
+    .snapshot-nav-btn:disabled{
+      opacity:.35;
+      cursor:default;
+      pointer-events:none;
+    }
+    .snapshot-nav-btn svg{width:26px;height:26px;}
+
+    /* Lock button — separate to the right of the nav row, same blue-outline style. */
+    #snapshotLockBtn{
+      width:48px;
+      background:transparent;
+      border:2px solid #2d5aed;
+      border-radius:8px;
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#2d5aed;
+      font-size:20px;
+      cursor:pointer;
+      transition:background .12s,border-color .12s,color .12s;
+      min-height:44px;
+    }
+    #snapshotLockBtn:hover{
+      background:#2d5aed22;
+      border-color:#3f6fff;
+      color:#3f6fff;
+    }
+    #snapshotLockBtn.locked{
+      background:#2d5aed;
+      color:#fff;
+      border-color:#2d5aed;
+    }
+    #snapshotLockBtn.locked:hover{
+      background:#3f6fff;
+      border-color:#3f6fff;
+    }
+    #snapshotLockBtn svg{width:20px;height:20px;}
+
+    #snapshotMeta{
+      font-size:10.5px;
+      color:var(--sub);
+      text-align:center;
+      letter-spacing:.02em;
+    }
+
+    /* Floating tool panels — right-anchored so they sit left of the sidebar. */
     .floating-panel{
       position:fixed;top:64px;right:320px;z-index:1200;display:none;
       background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px #0007;
@@ -153,7 +261,6 @@
       font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;
     }
     .panel-close-btn:hover{background:var(--accent2);color:#fff;border-color:var(--accent2);}
-    .panel-header-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 
     .panel-drag-handle{width:100%;height:10px;margin-bottom:2px;cursor:grab;display:flex;align-items:center;justify-content:center;border-radius:4px;touch-action:none;}
     .panel-drag-handle:active{cursor:grabbing;}
@@ -177,11 +284,6 @@
     .color-btn.selected,.unit-btn.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;font-weight:600;}
     .panel-result{margin-top:8px;font-size:12px;color:var(--sub);min-height:24px;line-height:1.45;}
 
-    .settings-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:12.5px;}
-    .settings-row label{cursor:pointer;}
-    .settings-row input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
-
-    /* Search box — floating top-center, same placement Playfra uses. */
     #searchBox{
       position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1200;
       width:min(340px,85vw);
@@ -225,7 +327,6 @@
     }
     .basemap-toggle-btn.active-toggle{background:var(--accent);color:#fff;}
 
-    /* Leaflet control theming */
     .leaflet-control-zoom a{
       background:var(--panel) !important;color:var(--text) !important;border-color:var(--border) !important;
     }
@@ -245,7 +346,6 @@
     .leaflet-popup.polygon-edit-popup .leaflet-popup-tip{background:var(--panel);}
     .leaflet-popup.polygon-edit-popup .leaflet-popup-close-button{color:var(--sub) !important;}
 
-    /* Coordinate popup */
     .coord-popup{font-size:12px;min-width:190px;padding-right:14px;}
     .coord-popup .cp-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
     .coord-popup .cp-label{width:52px;color:var(--sub);font-size:10.5px;}
@@ -253,7 +353,6 @@
     .coord-popup button{padding:3px 6px;font-size:10.5px;}
     .coord-popup .cp-share{width:100%;margin-top:4px;}
 
-    /* Watermark */
     #watermark-overlay {
       position:absolute;top:0;left:0;right:0;bottom:0;
       z-index:750;pointer-events:none;
@@ -261,7 +360,7 @@
       background-repeat:repeat;
     }
 
-    /* ---- Mobile layout (ported from Playfra) ---- */
+    /* ---- Mobile layout ---- */
     :root[data-device="mobile"] #sidebar{
       position:fixed; left:0; right:0; bottom:0; top:auto; width:100%; min-width:0;
       max-height:75vh; max-height:75dvh; border-left:none; border-top:1px solid var(--border);
@@ -278,9 +377,20 @@
     :root[data-device="mobile"] #searchBox{ width:calc(100vw - 150px); }
     :root[data-device="mobile"] .basemap-toggle-btn{ width:42px; height:42px; }
     :root[data-device="mobile"] button{ padding:9px 12px; font-size:13px; min-height:38px; }
-    :root[data-device="mobile"] button.small{ padding:7px 10px; min-height:32px; }
     :root[data-device="mobile"] .floating-panel{
       right:12px; left:12px; top:auto; bottom:80px; width:auto; max-height:60vh;
+    }
+    :root[data-device="mobile"] #toolRow{
+      top:14px; left:14px; right:14px;
+      justify-content:flex-start;
+      flex-wrap:wrap;
+    }
+    :root[data-device="mobile"] #snapshotPanel{
+      left:12px; right:12px; top:auto; bottom:80px; transform:none;
+      width:auto;
+    }
+    :root[data-device="mobile"] #snapshotDescBox{
+      min-height:90px; font-size:13.5px;
     }
   </style>
 </head>
@@ -309,32 +419,9 @@
       </span>
     </div>
 
-    <div class="toolbar">
-      <button id="btnToolRuler" style="flex:1;" title="Measure distance along a path">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="1.5"/><line x1="7" y1="8" x2="7" y2="11"/><line x1="11" y1="8" x2="11" y2="11"/><line x1="15" y1="8" x2="15" y2="11"/><line x1="19" y1="8" x2="19" y2="11"/></svg>
-        Ruler
-      </button>
-      <button id="btnToolDraw" style="flex:1;" title="Freehand sketch/annotate on the map">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Draw
-      </button>
-      <button id="btnToolCoord" style="flex:1;" title="Click anywhere on the map to look up its coordinates">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
-        Coords
-      </button>
-    </div>
-
     <div class="overlay-section">
       <h3>Layers</h3>
       <div id="grouped-layer-container"></div>
-    </div>
-
-    <div class="overlay-section">
-      <h3>Settings</h3>
-      <div class="settings-row">
-        <label for="toggle-crosshair">Center crosshair</label>
-        <input type="checkbox" id="toggle-crosshair" onchange="toggleCrosshairSetting(this.checked)">
-      </div>
     </div>
 
     <div class="credit-block">
@@ -346,6 +433,42 @@
     </div>
   </div>
 
+</div>
+
+<!-- Tool row — top-left corner -->
+<div id="toolRow">
+  <button id="btnToolRuler" title="Measure distance along a path">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="1.5"/><line x1="7" y1="8" x2="7" y2="11"/><line x1="11" y1="8" x2="11" y2="11"/><line x1="15" y1="8" x2="15" y2="11"/><line x1="19" y1="8" x2="19" y2="11"/></svg>
+    Ruler
+  </button>
+  <button id="btnToolDraw" title="Freehand sketch/annotate on the map">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Draw
+  </button>
+  <button id="btnToolCoord" title="Click anywhere on the map to look up its coordinates">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+    Coords
+  </button>
+</div>
+
+<!-- Snapshot panel — matches the screenshot -->
+<div id="snapshotPanel">
+  <div id="snapshotDescBox">
+    <span class="snapshot-placeholder">Snapshot description</span>
+  </div>
+  <div id="snapshotNavRow">
+    <button class="snapshot-nav-btn" id="btnSnapPrev" title="Previous snapshot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="snapshot-nav-btn" id="btnSnapNext" title="Next snapshot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button id="snapshotLockBtn" title="Lock snapshot navigation">
+      <svg class="icon-unlocked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
+      <svg class="icon-locked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+    </button>
+  </div>
+  <div id="snapshotMeta"></div>
 </div>
 
 <div id="searchBox">
@@ -471,9 +594,6 @@
     preferCanvas: true,
     layers: [baseLayers[currentBasemapKey].layer]
   });
-  document.getElementById('mapWrap').appendChild(map.getContainer().parentNode === document.getElementById('mapWrap') ? document.createElement('div') : document.createElement('div'));
-  // Reparent Leaflet's control container into #mapWrap so the controls stack
-  // sits above the crosshair and above the map canvas itself.
   document.getElementById('mapWrap').appendChild(map._controlContainer);
 
   var scaleControl = L.control.scale({
@@ -533,18 +653,13 @@
   var crosshairHotspot = crosshairEl.querySelector('.ch-hotspot');
   function setCrosshairVisible(on) {
     crosshairEl.classList.toggle('active', on);
-    var cb = document.getElementById('toggle-crosshair');
-    if (cb) cb.checked = on;
     var btn = document.getElementById('btnCrosshairToggle');
     if (btn) btn.classList.toggle('active-toggle', on);
     try { localStorage.setItem(CROSSHAIR_STORAGE_KEY, on ? '1' : '0'); } catch (e) {}
   }
-  function toggleCrosshairSetting(on){
-    setCrosshairVisible(on);
-  }
   try { setCrosshairVisible(localStorage.getItem(CROSSHAIR_STORAGE_KEY) === '1'); } catch (e) {}
 
-  /* --- Coordinate popup, shared by crosshair hotspot and Coords tool --- */
+  /* --- Coordinate popup --- */
   var COPY_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
   var CHECK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>';
   var LINK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><line x1="8.3" y1="10.8" x2="15.7" y2="7.2"/><line x1="8.3" y1="13.2" x2="15.7" y2="16.8"/></svg>';
@@ -604,7 +719,7 @@
     openCoordPopupAt(map.getCenter());
   });
 
-  /* --- Control stack (top-right): sidebar toggle, basemap, theme, crosshair --- */
+  /* --- Control stack (top-right) --- */
   var SidebarToggleControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -624,7 +739,6 @@
   });
   map.addControl(new SidebarToggleControl());
 
-  // Basemap icon control with a dropdown menu.
   var BasemapControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -665,7 +779,6 @@
     });
   }
 
-  // Theme icon button — moon in dark mode (click → light), sun in light mode.
   var SUN_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></svg>';
   var MOON_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>';
   var ThemeControl = L.Control.extend({
@@ -686,7 +799,6 @@
   });
   map.addControl(new ThemeControl());
 
-  // Crosshair toggle — same icon Playfra uses in its own top-right stack.
   var CrosshairToggleControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -703,24 +815,43 @@
     }
   });
   map.addControl(new CrosshairToggleControl());
-  // Reflect whatever was restored from storage onto the just-created button.
   setCrosshairVisible(crosshairEl.classList.contains('active'));
+
+  // Manual device-mode toggle icon — so you're never stuck on auto-detect.
+  var PHONE_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>';
+  var DESKTOP_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="1.5"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+  var DeviceControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      function render() {
+        var mode = document.documentElement.getAttribute('data-device') === 'mobile' ? 'mobile' : 'desktop';
+        btn.innerHTML = mode === 'mobile' ? DESKTOP_ICON : PHONE_ICON;
+        btn.title = mode === 'mobile' ? 'Switch to desktop layout' : 'Switch to mobile layout';
+      }
+      render();
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){
+        var current = document.documentElement.getAttribute('data-device') === 'mobile' ? 'mobile' : 'desktop';
+        var next = current === 'mobile' ? 'desktop' : 'mobile';
+        document.documentElement.setAttribute('data-device', next);
+        try { localStorage.setItem('polradDevice_v1', next); } catch (e) {}
+        render();
+        setTimeout(function(){ map.invalidateSize(); }, 60);
+      });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
+  });
+  map.addControl(new DeviceControl());
 
   /* --- Layer loading --- */
   var mainLayers = {};
   var extraLayers = {};
-
-  function fetchGeoJSON(file) {
-    var bust = (file.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now();
-    return fetch(file + bust, { cache: 'no-store' }).then(function(r){
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    });
-  }
-
   var layerFiles = [
     {
       file: 'russia.geojson',
+      layerKey: 'russia',
       name: 'Russian-controlled territory',
       color: '#a52714',
       outlineColor: '#ff0000',
@@ -731,6 +862,7 @@
     },
     {
       file: 'grayzone.geojson',
+      layerKey: 'grayzone',
       name: 'Gray zone',
       color: '#c3c3c3',
       outlineColor: '#b4b4b4',
@@ -740,42 +872,55 @@
       pane: 'grayZonePane'
     }
   ];
+  var liveLayerData = {}; // { layerKey: FeatureCollection } — for restoring live state after a snapshot
+
+  function fetchGeoJSON(file) {
+    var bust = (file.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now();
+    return fetch(file + bust, { cache: 'no-store' }).then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  function makeGeoLayer(layerInfo, data) {
+    return L.geoJSON(data, {
+      pane: layerInfo.pane,
+      smoothFactor: layerInfo.smoothFactor !== undefined ? layerInfo.smoothFactor : 1.0,
+      style: function(){
+        var style = {
+          color: layerInfo.outlineColor || layerInfo.color,
+          weight: 2,
+          fillColor: layerInfo.color,
+          fillOpacity: layerInfo.fillOpacity !== undefined ? layerInfo.fillOpacity : 0.4
+        };
+        if (layerInfo.noOutline) style.stroke = false;
+        return style;
+      },
+      onEachFeature: function(feature, featureLayer){
+        if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
+          featureLayer.on('click', function(e){
+            if (activeTool) return;
+            var areaM = turf.area(featureLayer.toGeoJSON());
+            L.popup({ className: 'polygon-edit-popup' })
+              .setLatLng(e.latlng)
+              .setContent(
+                '<b>' + layerInfo.name + '</b><br>' +
+                '<b>Area:</b> ' + (areaM / 1e6).toFixed(2) + ' km² (' + (areaM / 2589988.11).toFixed(2) + ' sq mi)'
+              )
+              .openOn(map);
+            if (!activeTool) L.DomEvent.stopPropagation(e);
+          });
+        }
+      }
+    });
+  }
 
   layerFiles.forEach(function(layerInfo){
     fetchGeoJSON(layerInfo.file)
       .then(function(data){
-        var layer = L.geoJSON(data, {
-          pane: layerInfo.pane,
-          smoothFactor: layerInfo.smoothFactor !== undefined ? layerInfo.smoothFactor : 1.0,
-          style: function(){
-            var style = {
-              color: layerInfo.outlineColor || layerInfo.color,
-              weight: 2,
-              fillColor: layerInfo.color,
-              fillOpacity: layerInfo.fillOpacity !== undefined ? layerInfo.fillOpacity : 0.4
-            };
-            if (layerInfo.noOutline) style.stroke = false;
-            return style;
-          },
-          onEachFeature: function(feature, featureLayer){
-            if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
-              featureLayer.on('click', function(e){
-                if (activeTool) return;
-                var areaM = turf.area(featureLayer.toGeoJSON());
-                L.popup({ className: 'polygon-edit-popup' })
-                  .setLatLng(e.latlng)
-                  .setContent(
-                    '<b>' + layerInfo.name + '</b><br>' +
-                    '<b>Area:</b> ' + (areaM / 1e6).toFixed(2) + ' km² (' + (areaM / 2589988.11).toFixed(2) + ' sq mi)'
-                  )
-                  .openOn(map);
-                if (!activeTool) L.DomEvent.stopPropagation(e);
-              });
-            }
-          }
-        });
-
+        var layer = makeGeoLayer(layerInfo, data);
         mainLayers[layerInfo.name] = layer;
+        liveLayerData[layerInfo.layerKey] = data;
         layer.addTo(map);
         updateSidebarLayerControl();
       })
@@ -786,7 +931,6 @@
     var container = document.getElementById('grouped-layer-container');
     if (!container) return;
     container.innerHTML = '';
-
     Object.keys(mainLayers).forEach(function(name){
       var layer = mainLayers[name];
       var row = document.createElement('div');
@@ -810,39 +954,144 @@
     });
   }
 
-  /* --- Floating panels: mutually exclusive, right-anchored, draggable --- */
+  /* --- Snapshot system ---
+     Loads snapshots.json (array, oldest-first). The LAST entry is the "live"
+     state — navigating to it swaps back to the live russia.geojson /
+     grayzone.geojson instead of a snapshot's own data. If the file is missing
+     or empty, the panel stays hidden and the map just shows live files. */
+  var snapshots = [];
+  var snapshotIndex = 0;
+  var snapshotLocked = false;
+  var snapshotPanel = document.getElementById('snapshotPanel');
+  var snapshotDescBox = document.getElementById('snapshotDescBox');
+  var snapshotMeta = document.getElementById('snapshotMeta');
+  var btnSnapPrev = document.getElementById('btnSnapPrev');
+  var btnSnapNext = document.getElementById('btnSnapNext');
+  var snapshotLockBtn = document.getElementById('snapshotLockBtn');
+
+  function snapshotsLiveIndex() { return snapshots.length - 1; }
+  function isSnapshotAtLive() { return snapshotIndex === snapshotsLiveIndex(); }
+
+  function loadSnapshots() {
+    fetch('snapshots.json?v=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data){
+        if (!Array.isArray(data) || !data.length) return;
+        snapshots = data;
+        snapshotIndex = snapshotsLiveIndex();
+        snapshotPanel.classList.add('open');
+        applySnapshotState();
+      })
+      .catch(function(){
+        // No snapshots.json (or malformed) — panel stays hidden, map shows live files.
+        snapshots = [];
+        snapshotPanel.classList.remove('open');
+      });
+  }
+
+  function escapeHtmlText(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function renderSnapshotPanel() {
+    if (!snapshots.length) return;
+    var item = snapshots[snapshotIndex];
+    var isLive = isSnapshotAtLive();
+    if (isLive) {
+      snapshotDescBox.innerHTML =
+        '<span class="snapshot-placeholder">Live — current published state.</span>' +
+        '<span class="snapshot-meta">' + escapeHtmlText((item && item.date) || '') + ((item && item.time) ? ' · ' + escapeHtmlText(item.time) : '') + '</span>';
+    } else {
+      snapshotDescBox.innerHTML =
+        escapeHtmlText(item.text || '(no description)') +
+        '<span class="snapshot-meta">' + escapeHtmlText(item.date || '') + (item.time ? ' · ' + escapeHtmlText(item.time) : '') + ' · snapshot ' + (snapshotIndex + 1) + ' of ' + snapshots.length + '</span>';
+    }
+    btnSnapPrev.disabled = snapshotIndex <= 0;
+    btnSnapNext.disabled = snapshotIndex >= snapshotsLiveIndex();
+    snapshotMeta.textContent = snapshotLocked ? 'Locked — navigation disabled' : 'Unlocked';
+  }
+
+  function applySnapshotState() {
+    if (!snapshots.length) return;
+    var item = snapshots[snapshotIndex];
+    var isLive = isSnapshotAtLive();
+
+    Object.keys(mainLayers).forEach(function(name){
+      var info = layerFiles.find(function(l){ return l.name === name; });
+      if (!info) return;
+      var layer = mainLayers[name];
+      layer.clearLayers();
+
+      var sourceData;
+      if (isLive) {
+        sourceData = liveLayerData[info.layerKey];
+      } else {
+        sourceData = item.layers && item.layers[info.layerKey];
+      }
+
+      if (sourceData) layer.addData(sourceData);
+      // If a snapshot lacks a key for this layer, the layer just stays empty —
+      // same behavior as the original Polrad viewer for a missing file.
+    });
+    renderSnapshotPanel();
+  }
+
+  btnSnapPrev.addEventListener('click', function(){
+    if (snapshotLocked || !snapshots.length) return;
+    if (snapshotIndex <= 0) return;
+    snapshotIndex--;
+    applySnapshotState();
+  });
+  btnSnapNext.addEventListener('click', function(){
+    if (snapshotLocked || !snapshots.length) return;
+    if (snapshotIndex >= snapshotsLiveIndex()) return;
+    snapshotIndex++;
+    applySnapshotState();
+  });
+
+  function setSnapshotLocked(locked) {
+    snapshotLocked = !!locked;
+    snapshotLockBtn.classList.toggle('locked', snapshotLocked);
+    snapshotLockBtn.querySelector('.icon-unlocked').style.display = snapshotLocked ? 'none' : 'inline';
+    snapshotLockBtn.querySelector('.icon-locked').style.display = snapshotLocked ? 'inline' : 'none';
+    snapshotLockBtn.title = snapshotLocked ? 'Unlock snapshot navigation' : 'Lock snapshot navigation';
+    try { localStorage.setItem('polradSnapshotLocked_v1', snapshotLocked ? '1' : '0'); } catch (e) {}
+    renderSnapshotPanel();
+  }
+  snapshotLockBtn.addEventListener('click', function(){ setSnapshotLocked(!snapshotLocked); });
+  try { setSnapshotLocked(localStorage.getItem('polradSnapshotLocked_v1') === '1'); } catch (e) { setSnapshotLocked(false); }
+
+  loadSnapshots();
+
+  /* --- Floating panels --- */
   function closeAllPanels(except) {
     document.querySelectorAll('.floating-panel').forEach(function(p){
       if (p !== except) p.classList.remove('open');
     });
-    document.querySelectorAll('#sidebar .toolbar button').forEach(function(b){
-      if (b.id && b.id.indexOf('btnTool') === 0) b.classList.remove('active-toggle');
-    });
+    document.querySelectorAll('#toolRow button').forEach(function(b){ b.classList.remove('active-toggle'); });
     setActiveTool(null);
   }
-
   function openPanel(name) {
     var panel = document.getElementById('panel-' + name);
     if (!panel) return;
     var isOpen = panel.classList.contains('open');
     closeAllPanels();
-    if (isOpen) return; // it was open, now closed — no reopen
+    if (isOpen) return;
     panel.classList.add('open');
     var trigger = document.getElementById('btnTool' + name.charAt(0).toUpperCase() + name.slice(1));
     if (trigger) trigger.classList.add('active-toggle');
     if (name === 'ruler') setActiveTool('ruler');
     else if (name === 'coords') setActiveTool('coords');
   }
-
   document.getElementById('btnToolRuler').addEventListener('click', function(){ openPanel('ruler'); });
   document.getElementById('btnToolDraw').addEventListener('click',  function(){ openPanel('draw'); });
   document.getElementById('btnToolCoord').addEventListener('click', function(){ openPanel('coords'); });
-
   document.querySelectorAll('.panel-close-btn').forEach(function(btn){
     btn.addEventListener('click', function(){ closeAllPanels(); });
   });
 
-  /* --- Floating panel dragging --- */
   function makePanelDraggable(panelEl) {
     var handle = panelEl.querySelector('.panel-drag-handle');
     if (!handle) return;
@@ -875,7 +1124,7 @@
     makePanelDraggable(document.getElementById(id));
   });
 
-  /* --- Search box (top-center) --- */
+  /* --- Search --- */
   var searchInput = document.getElementById('searchInput');
   var searchResultsEl = document.getElementById('searchResults');
   var searchClearBtn = document.getElementById('searchClearBtn');
@@ -890,16 +1139,18 @@
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
     return { lat: lat, lng: lng };
   }
-
   function updateSearchClearBtn() {
     searchClearBtn.style.display = (searchInput.value || searchMarker) ? 'flex' : 'none';
   }
-
   function clearSearchMarker() {
     if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
     updateSearchClearBtn();
   }
-
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
   function goToResult(lat, lng, label, zoom) {
     map.setView([lat, lng], zoom || Math.max(map.getZoom(), 12));
     clearSearchMarker();
@@ -911,7 +1162,6 @@
     searchInput.value = label || (lat.toFixed(5) + ', ' + lng.toFixed(5));
     updateSearchClearBtn();
   }
-
   function renderSearchResults(items) {
     if (!items.length) { searchResultsEl.style.display = 'none'; searchResultsEl.innerHTML = ''; return; }
     searchResultsEl.innerHTML = items.map(function(it, i){
@@ -928,17 +1178,9 @@
       });
     });
   }
-
-  function escapeHtml(s) {
-    return (s || '').replace(/[&<>"']/g, function(c){
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-    });
-  }
-
   function runSearch(query, autoGo) {
     var q = query.trim();
     if (!q) { searchResultsEl.style.display = 'none'; return; }
-
     var coordHit = parseLatLngInput(q);
     if (coordHit) {
       var item = { main: coordHit.lat.toFixed(5) + ', ' + coordHit.lng.toFixed(5), sub: 'Coordinates', lat: coordHit.lat, lng: coordHit.lng, zoom: 15 };
@@ -953,20 +1195,13 @@
       .then(function(r){ return r.json(); })
       .then(function(results){
         var items = results.map(function(r){
-          return {
-            main: r.display_name.split(',')[0],
-            sub: r.display_name,
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lon),
-            zoom: 13
-          };
+          return { main: r.display_name.split(',')[0], sub: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon), zoom: 13 };
         });
         if (autoGo) { if (items.length) goToResult(items[0].lat, items[0].lng, items[0].main, items[0].zoom); }
         else renderSearchResults(items);
       })
       .catch(function(err){ if (err.name !== 'AbortError' && !autoGo) renderSearchResults([]); });
   }
-
   searchInput.addEventListener('input', function(){
     updateSearchClearBtn();
     clearTimeout(searchDebounce);
@@ -986,7 +1221,6 @@
     if (!e.target.closest('#searchBox')) searchResultsEl.style.display = 'none';
   });
 
-  /* --- Mobile / desktop sidebar tap --- */
   document.querySelector('.sidebar-header').addEventListener('click', function(){
     if (document.documentElement.getAttribute('data-device') === 'mobile') {
       document.getElementById('sidebar').classList.toggle('expanded');
@@ -1004,9 +1238,6 @@
   var userDrawings = L.layerGroup().addTo(map);
   extraLayers['My Drawings'] = userDrawings;
 
-  // attachEraser: eraseSubLayer may be a sub-layer (line or arrowhead) whose
-  // removal should remove the WHOLE owning group — that's what fixes the
-  // "eraser on arrows only removes one half" bug.
   function attachEraser(layer, owningGroup) {
     layer.on('click', function(e){
       if (activeTool === 'eraser') {
@@ -1015,12 +1246,10 @@
       }
     });
   }
-
   function setThickness(val) {
     currentThickness = parseInt(val, 10);
     document.getElementById('thickness-val').innerText = val + 'px';
   }
-
   function setColor(color) {
     currentColor = color;
     var colorMap = {
@@ -1032,7 +1261,6 @@
       if (el) el.classList.toggle('selected', key === color);
     });
   }
-
   function setActiveTool(tool) {
     activeTool = (activeTool === tool) ? null : tool;
     if (activeTool !== 'coords') clearCoordMarker();
@@ -1041,14 +1269,12 @@
     updateInstructions();
     document.body.classList.toggle('no-select-mode', !!activeTool);
   }
-
   function resetDrawingState() {
     drawingPoints = [];
     if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
     isMouseDown = false;
     map.dragging.enable();
   }
-
   function updateToolButtons() {
     document.querySelectorAll('#panel-draw .tool-btn').forEach(function(b){ b.classList.remove('active-toggle'); });
     if (activeTool) {
@@ -1056,7 +1282,6 @@
       if (btn) btn.classList.add('active-toggle');
     }
   }
-
   function updateInstructions() {
     var drawMsg = document.getElementById('draw-result');
     var rulerMsg = document.getElementById('ruler-result');
@@ -1095,7 +1320,6 @@
     if (activeTool === 'dashed-freehand' || activeTool === 'dashed-freehand-arrow') options.dashArray = '6, 6';
     previewLayer = L.polyline(drawingPoints, options).addTo(map);
   });
-
   map.on('mousemove', function(e){
     if ((activeTool === 'freehand' || activeTool === 'dashed-freehand' ||
          activeTool === 'freehand-arrow' || activeTool === 'dashed-freehand-arrow') && isMouseDown) {
@@ -1118,7 +1342,6 @@
       previewLayer = L.polyline([drawingPoints[0], e.latlng], options).addTo(map);
     }
   });
-
   map.on('mouseup', function(){
     if ((activeTool !== 'freehand' && activeTool !== 'dashed-freehand' &&
          activeTool !== 'freehand-arrow' && activeTool !== 'dashed-freehand-arrow') || !isMouseDown) return;
@@ -1143,22 +1366,16 @@
   function clearCoordMarker() {
     if (coordMarker) { map.removeLayer(coordMarker); coordMarker = null; }
   }
-
   function selectCoordinate(latlng) {
     var latText = latlng.lat.toFixed(5);
     var lngText = latlng.lng.toFixed(5);
-
     clearCoordMarker();
     coordMarker = L.circleMarker(latlng, {
       radius: 7, color: '#ffffff', weight: 2, fillColor: '#ff0000', fillOpacity: 1, pane: 'markersPane'
     }).addTo(map);
-
     coordMarker.bindPopup(buildCoordPopupHtml(latlng.lat, latlng.lng), { className: 'polygon-edit-popup' }).openPopup();
-
-    document.getElementById('coords-result').innerHTML =
-      'Lat: ' + latText + ', Lng: ' + lngText;
+    document.getElementById('coords-result').innerHTML = 'Lat: ' + latText + ', Lng: ' + lngText;
   }
-
   map.getContainer().addEventListener('click', function(ev){
     if (activeTool !== 'coords') return;
     if (ev.target.closest('.leaflet-popup, .leaflet-control')) return;
@@ -1167,15 +1384,12 @@
     map._coordinateClickHandled = true;
     selectCoordinate(latlng);
   }, true);
-
   map.on('click', function(e){
     if (activeTool === 'coords') {
       if (map._coordinateClickHandled) { map._coordinateClickHandled = false; return; }
     }
     if (!activeTool) return;
-
     if (activeTool === 'coords') { selectCoordinate(e.latlng); return; }
-
     if (activeTool === 'polygon' || activeTool === 'line' || activeTool === 'dashed-line' || activeTool === 'ruler') {
       drawingPoints.push(e.latlng);
       if (previewLayer) map.removeLayer(previewLayer);
@@ -1189,7 +1403,6 @@
       }
       return;
     }
-
     if (activeTool === 'rectangle') {
       if (drawingPoints.length === 0) {
         drawingPoints.push(e.latlng);
@@ -1205,7 +1418,6 @@
       }
       return;
     }
-
     if (activeTool === 'flag-ua' || activeTool === 'flag-ru') {
       var flagIcon = activeTool === 'flag-ua' ? ukraineFlagIcon : russiaFlagIcon;
       var flagLabel = activeTool === 'flag-ua' ? 'Ukraine flag' : 'Russia flag';
@@ -1214,7 +1426,6 @@
       userDrawings.addLayer(flagMarker);
       return;
     }
-
     if (activeTool === 'arrow' || activeTool === 'dashed-arrow') {
       if (drawingPoints.length === 0) {
         drawingPoints.push(e.latlng);
@@ -1241,7 +1452,6 @@
     if (isDashed) options.dashArray = '6, 6';
     var line = L.polyline([start, end], options);
     group.addLayer(line);
-
     var p1 = map.latLngToLayerPoint(start);
     var p2 = map.latLngToLayerPoint(end);
     var angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
@@ -1254,21 +1464,16 @@
       { color: color, fillColor: color, fillOpacity: 1 }
     );
     group.addLayer(head);
-
-    // Both sub-layers erase the WHOLE group, not just themselves.
     attachEraser(line, group);
     attachEraser(head, group);
-
     userDrawings.addLayer(group);
   }
-
   function addFreehandArrow(pts, color, weight, isDashed) {
     var group = L.layerGroup();
     var options = { color: color, weight: weight };
     if (isDashed) options.dashArray = '6, 6';
     var line = L.polyline(pts, options);
     group.addLayer(line);
-
     var endPt = pts[pts.length - 1];
     var prevPt = pts[Math.max(0, pts.length - 5)];
     var p1 = map.latLngToLayerPoint(prevPt);
@@ -1283,13 +1488,10 @@
       { color: color, fillColor: color, fillOpacity: 1 }
     );
     group.addLayer(head);
-
     attachEraser(line, group);
     attachEraser(head, group);
-
     userDrawings.addLayer(group);
   }
-
   function finishShape() {
     if (activeTool === 'polygon' && drawingPoints.length >= 3) {
       var poly = L.polygon(drawingPoints, {
@@ -1306,7 +1508,6 @@
     }
     resetDrawingState();
   }
-
   function clearDrawings() {
     userDrawings.clearLayers();
     resetDrawingState();
