@@ -10,6 +10,35 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://server.arcgisonline.com">
+
+  <script>
+    // Theme applied before paint so a saved light theme doesn't flash dark.
+    (function() {
+      try {
+        if (localStorage.getItem('polradTheme_v1') === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {}
+    })();
+    // Device mode applied before Leaflet measures its container, same rationale
+    // as Playfra's own copy of this — a CSS-only width change the map never
+    // hears about otherwise.
+    (function() {
+      try {
+        var saved = localStorage.getItem('polradDevice_v1');
+        var device = saved;
+        if (!device) {
+          var mobile = false;
+          if (navigator.userAgentData && navigator.userAgentData.mobile === true) mobile = true;
+          if (/Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent)) mobile = true;
+          if (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) mobile = true;
+          device = mobile ? 'mobile' : 'desktop';
+        }
+        document.documentElement.setAttribute('data-device', device === 'mobile' ? 'mobile' : 'desktop');
+      } catch (e) {}
+    })();
+  </script>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -29,6 +58,7 @@
     }
     *{box-sizing:border-box;}
     html,body{height:100%;margin:0;font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+
     #app{display:flex;height:100vh;height:100dvh;width:100vw;overflow:hidden;}
 
     #mapWrap{flex:1;height:100%;position:relative;z-index:0;}
@@ -36,6 +66,20 @@
       position:absolute;inset:0;z-index:0;background:var(--bg);
       -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
     }
+    #mapWrap > .leaflet-control-container{z-index:2;}
+
+    /* Crosshair — viewport-centered cross with an invisible clickable hotspot
+       that opens the coordinate lookup, same convention as Playfra's own. */
+    #crosshair{position:absolute;top:50%;left:50%;width:0;height:0;z-index:2;display:none;pointer-events:none;}
+    #crosshair.active{display:block;}
+    .ch-line{position:absolute;background:var(--text);opacity:.6;box-shadow:0 0 2px #0008;}
+    .ch-h{width:30px;height:1.5px;top:0;left:-15px;}
+    .ch-v{width:1.5px;height:30px;top:-15px;left:0;}
+    .ch-hotspot{
+      position:absolute;top:-20px;left:-20px;width:40px;height:40px;border-radius:50%;
+      pointer-events:auto;cursor:pointer;background:transparent;transition:background .12s;
+    }
+    .ch-hotspot:hover, .ch-hotspot.tapped{background:#ffffff26;}
 
     #sidebar{
       width:300px;min-width:300px;background:var(--panel);border-left:1px solid var(--border);
@@ -43,9 +87,10 @@
       transition:width .22s ease,min-width .22s ease,border-color .22s ease;
       position:relative;z-index:1;
     }
-    #sidebar.collapsed{
+    :root:not([data-device="mobile"]) #sidebar.collapsed{
       width:0; min-width:0; border-left-color:transparent; overflow:hidden;
     }
+
     .sidebar-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);}
     .sidebar-header h1{font-size:14.5px;margin:0 0 2px;font-weight:700;letter-spacing:.01em;}
     .sidebar-header p{font-size:11px;color:var(--sub);margin:0;}
@@ -76,14 +121,6 @@
     .overlay-row label{flex:1;cursor:pointer;}
     .overlay-row input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
 
-    .layer-card{
-      background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius);
-      margin-bottom:8px;padding:11px;transition:.12s;cursor:pointer;
-    }
-    .layer-row{display:flex;align-items:center;gap:8px;}
-    .layer-name{flex:1;font-size:13px;font-weight:600;}
-    .layer-meta{font-size:10.5px;color:var(--sub);display:flex;justify-content:space-between;margin-top:6px;}
-
     .credit-block{
       display:flex;flex-direction:column;gap:6px;align-items:flex-end;
       padding:12px 14px;margin-top:auto;border-top:1px solid var(--border);
@@ -98,13 +135,14 @@
     ::-webkit-scrollbar{width:8px;}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
-    /* Floating panels (draw / ruler / coords / settings) as centered modals
-       over the map, matching Playfra's floating conventions. */
+    /* Floating panels — anchored to the RIGHT side of the map so they sit
+       just left of the sidebar and never cover the map center. Draggable via
+       their own top handle; mutually exclusive via toggleTab(). */
     .floating-panel{
-      position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:1200;display:none;
+      position:fixed;top:64px;right:320px;z-index:1200;display:none;
       background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px #0007;
       padding:10px 12px;font-size:12.5px;flex-direction:column;gap:6px;
-      width:min(380px,calc(100vw - 28px));
+      width:min(340px,calc(100vw - 340px));
       max-height:calc(100vh - 90px);overflow-y:auto;
     }
     .floating-panel.open{display:flex;}
@@ -143,6 +181,50 @@
     .settings-row label{cursor:pointer;}
     .settings-row input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
 
+    /* Search box — floating top-center, same placement Playfra uses. */
+    #searchBox{
+      position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1200;
+      width:min(340px,85vw);
+    }
+    #searchInput{
+      width:100%;padding:9px 34px 9px 34px;border-radius:20px;border:1px solid var(--border);
+      background:var(--panel);color:var(--text);font-size:13px;box-shadow:0 4px 14px #0007;
+    }
+    #searchInput:focus{outline:none;border-color:var(--accent);}
+    #searchIcon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--sub);pointer-events:none;font-size:13px;}
+    #searchClearBtn{
+      position:absolute;right:6px;top:50%;transform:translateY(-50%);display:none;
+      width:22px;height:22px;padding:0;align-items:center;justify-content:center;
+      border:none;background:transparent;color:var(--sub);border-radius:50%;cursor:pointer;
+    }
+    #searchClearBtn:hover{background:var(--panel3);color:var(--text);}
+    #searchResults{
+      margin-top:6px;background:var(--panel);border:1px solid var(--border);border-radius:10px;
+      overflow:hidden;box-shadow:0 4px 14px #0007;display:none;max-height:260px;overflow-y:auto;
+    }
+    .search-result{padding:8px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border);}
+    .search-result:last-child{border-bottom:none;}
+    .search-result:hover,.search-result.active{background:var(--panel2);}
+    .search-result .sr-main{color:var(--text);}
+    .search-result .sr-sub{color:var(--sub);font-size:10.5px;margin-top:1px;}
+
+    .basemap-control{
+      background:var(--panel);border:1px solid var(--border);border-radius:8px;
+      box-shadow:0 2px 8px #0006;overflow:hidden;font-family:inherit;
+    }
+    .basemap-control button{
+      display:block;width:100%;text-align:left;border:none;border-radius:0;
+      border-bottom:1px solid var(--border);background:var(--panel);color:var(--text);
+      padding:7px 12px;font-size:12px;
+    }
+    .basemap-control button:last-child{border-bottom:none;}
+    .basemap-control button.active{background:var(--accent);color:#fff;font-weight:700;}
+    .basemap-toggle-btn{
+      width:36px;height:36px;background:var(--panel);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;
+    }
+    .basemap-toggle-btn.active-toggle{background:var(--accent);color:#fff;}
+
     /* Leaflet control theming */
     .leaflet-control-zoom a{
       background:var(--panel) !important;color:var(--text) !important;border-color:var(--border) !important;
@@ -151,6 +233,7 @@
       background:var(--panel2) !important;color:var(--text) !important;
     }
     .leaflet-control-attribution{font-size:10px!important;}
+    .leaflet-control-scale{margin-left:10px!important;}
     .leaflet-control-scale-line{
       background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;
       border-top:none!important;box-shadow:0 2px 8px #0006;border-radius:0 0 4px 4px;
@@ -162,14 +245,44 @@
     .leaflet-popup.polygon-edit-popup .leaflet-popup-tip{background:var(--panel);}
     .leaflet-popup.polygon-edit-popup .leaflet-popup-close-button{color:var(--sub) !important;}
 
+    /* Coordinate popup */
+    .coord-popup{font-size:12px;min-width:190px;padding-right:14px;}
+    .coord-popup .cp-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+    .coord-popup .cp-label{width:52px;color:var(--sub);font-size:10.5px;}
+    .coord-popup .cp-val{flex:1;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;}
+    .coord-popup button{padding:3px 6px;font-size:10.5px;}
+    .coord-popup .cp-share{width:100%;margin-top:4px;}
+
+    /* Watermark */
     #watermark-overlay {
       position:absolute;top:0;left:0;right:0;bottom:0;
       z-index:750;pointer-events:none;
       background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='160'><text x='10' y='90' font-family='Inter, Helvetica, Arial, sans-serif' font-size='22' font-weight='bold' fill='%23ffffff' fill-opacity='0.14' stroke='%23000000' stroke-opacity='0.10' stroke-width='0.5' transform='rotate(-25 160 80)'>POLRAD MAPPING</text></svg>");
       background-repeat:repeat;
     }
-  </style>
 
+    /* ---- Mobile layout (ported from Playfra) ---- */
+    :root[data-device="mobile"] #sidebar{
+      position:fixed; left:0; right:0; bottom:0; top:auto; width:100%; min-width:0;
+      max-height:75vh; max-height:75dvh; border-left:none; border-top:1px solid var(--border);
+      border-radius:14px 14px 0 0; box-shadow:0 -6px 24px #0008;
+      transform:translateY(calc(100% - 56px)); transition:transform .25s ease;
+      z-index:1300;
+    }
+    :root[data-device="mobile"] #sidebar.expanded{ transform:translateY(0); }
+    :root[data-device="mobile"] .sidebar-header{ cursor:pointer; position:relative; padding-right:40px; }
+    :root[data-device="mobile"] .sidebar-header::after{
+      content:''; position:absolute; right:18px; top:50%; width:28px; height:3px;
+      background:var(--sub); border-radius:2px; transform:translateY(-50%);
+    }
+    :root[data-device="mobile"] #searchBox{ width:calc(100vw - 150px); }
+    :root[data-device="mobile"] .basemap-toggle-btn{ width:42px; height:42px; }
+    :root[data-device="mobile"] button{ padding:9px 12px; font-size:13px; min-height:38px; }
+    :root[data-device="mobile"] button.small{ padding:7px 10px; min-height:32px; }
+    :root[data-device="mobile"] .floating-panel{
+      right:12px; left:12px; top:auto; bottom:80px; width:auto; max-height:60vh;
+    }
+  </style>
 </head>
 
 <body>
@@ -178,6 +291,11 @@
 
   <div id="mapWrap">
     <div id="map"></div>
+    <div id="crosshair">
+      <div class="ch-line ch-h"></div>
+      <div class="ch-line ch-v"></div>
+      <div class="ch-hotspot" title="View coordinates at the crosshair"></div>
+    </div>
     <div id="watermark-overlay"></div>
   </div>
 
@@ -207,21 +325,12 @@
     </div>
 
     <div class="overlay-section">
-      <h3>Basemap</h3>
-      <div id="basemap-options"></div>
-    </div>
-
-    <div class="overlay-section">
       <h3>Layers</h3>
       <div id="grouped-layer-container"></div>
     </div>
 
     <div class="overlay-section">
       <h3>Settings</h3>
-      <div class="settings-row">
-        <label for="toggle-dark-theme">Dark theme</label>
-        <input type="checkbox" id="toggle-dark-theme" checked onchange="setDarkTheme(this.checked)">
-      </div>
       <div class="settings-row">
         <label for="toggle-crosshair">Center crosshair</label>
         <input type="checkbox" id="toggle-crosshair" onchange="toggleCrosshairSetting(this.checked)">
@@ -237,6 +346,19 @@
     </div>
   </div>
 
+</div>
+
+<div id="searchBox">
+  <div style="position:relative;">
+    <span id="searchIcon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg>
+    </span>
+    <input id="searchInput" type="text" placeholder="Search place or coordinates…" autocomplete="off">
+    <button id="searchClearBtn" title="Clear">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+    </button>
+  </div>
+  <div id="searchResults"></div>
 </div>
 
 <!-- Floating Draw panel -->
@@ -311,34 +433,15 @@
 
 <script>
 
-  var publicLanguage = 'en';
-
-  var PUBLIC_TRANSLATIONS = {
-    en: {},
-    ru: {}
-  };
-  function pt(k){ return k; }
-  function publicLayerLabel(name){
-    var m = { 'Russian-controlled territory': 'Russian-controlled territory' };
-    return m[name] || name;
+  /* --- Theme --- */
+  function currentTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
+  function applyTheme(theme){
+    if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('polradTheme_v1', theme); } catch (e) {}
   }
 
-  function toggleFullScreen() {
-    var btn = document.getElementById('btn-fullscreen');
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-      if (btn) btn.classList.add('active');
-    } else {
-      document.exitFullscreen && document.exitFullscreen();
-      if (btn) btn.classList.remove('active');
-    }
-  }
-
-  var satellite = L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    { attribution: 'Tiles &copy; Esri', maxZoom: 19 }
-  );
-
+  /* --- Map --- */
   var esriHybrid = L.layerGroup([
     L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -349,13 +452,16 @@
       { attribution: 'Labels &copy; Esri', maxZoom: 19 }
     )
   ]);
+  var esriSat = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: 'Tiles &copy; Esri', maxZoom: 19 }
+  );
 
   var baseLayers = {
-    'Esri Hybrid (Satellite + Labels)': esriHybrid,
-    'Esri Satellite': satellite
+    'esriHybrid': { label: 'Esri Hybrid', layer: esriHybrid },
+    'esriSat':    { label: 'Esri Satellite', layer: esriSat }
   };
-
-  var currentBaseLayer = esriHybrid;
+  var currentBasemapKey = 'esriHybrid';
 
   var map = L.map('map', {
     center: [48.00, 37.75],
@@ -363,25 +469,22 @@
     scrollWheelZoom: true,
     zoomControl: false,
     preferCanvas: true,
-    layers: [currentBaseLayer]
+    layers: [baseLayers[currentBasemapKey].layer]
   });
-
-  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  document.getElementById('mapWrap').appendChild(map.getContainer().parentNode === document.getElementById('mapWrap') ? document.createElement('div') : document.createElement('div'));
+  // Reparent Leaflet's control container into #mapWrap so the controls stack
+  // sits above the crosshair and above the map canvas itself.
+  document.getElementById('mapWrap').appendChild(map._controlContainer);
 
   var scaleControl = L.control.scale({
-    position: 'bottomleft',
-    metric: true,
-    imperial: true,
-    maxWidth: 150
+    position: 'bottomleft', metric: true, imperial: true, maxWidth: 150
   }).addTo(map);
-
   var currentUnit = 'km';
 
   function setMeasurementUnit(unit) {
     currentUnit = unit;
     document.getElementById('unit-km').classList.toggle('selected', unit === 'km');
     document.getElementById('unit-mi').classList.toggle('selected', unit === 'mi');
-
     map.removeControl(scaleControl);
     scaleControl = L.control.scale({
       position: 'bottomleft',
@@ -389,7 +492,6 @@
       imperial: (unit === 'mi'),
       maxWidth: 150
     }).addTo(map);
-
     if (drawingPoints.length > 1 && activeTool === 'ruler') {
       var totalMeters = 0;
       for (var i = 1; i < drawingPoints.length; i++) {
@@ -407,17 +509,11 @@
     }
   }
 
-  function toggleCrosshairSetting(checked) {
-    // Placeholder — crosshair overlay was removed with the Google/Playfra chrome.
-    // Kept as a no-op so the checkbox doesn't throw.
-  }
-
-  function setDarkTheme(enabled) {
-    document.body.classList.toggle('light-mode', !enabled);
-  }
-
+  /* --- Panes --- */
   map.createPane('territoryPane');
   map.getPane('territoryPane').style.zIndex = 420;
+  map.createPane('grayZonePane');
+  map.getPane('grayZonePane').style.zIndex = 460;
   map.createPane('drawingsPane');
   map.getPane('drawingsPane').style.zIndex = 650;
   map.createPane('markersPane');
@@ -431,99 +527,184 @@
     };
   });
 
-  /* --- Header / floating panels --- */
+  /* --- Crosshair --- */
+  var CROSSHAIR_STORAGE_KEY = 'polradCrosshair_v1';
+  var crosshairEl = document.getElementById('crosshair');
+  var crosshairHotspot = crosshairEl.querySelector('.ch-hotspot');
+  function setCrosshairVisible(on) {
+    crosshairEl.classList.toggle('active', on);
+    var cb = document.getElementById('toggle-crosshair');
+    if (cb) cb.checked = on;
+    var btn = document.getElementById('btnCrosshairToggle');
+    if (btn) btn.classList.toggle('active-toggle', on);
+    try { localStorage.setItem(CROSSHAIR_STORAGE_KEY, on ? '1' : '0'); } catch (e) {}
+  }
+  function toggleCrosshairSetting(on){
+    setCrosshairVisible(on);
+  }
+  try { setCrosshairVisible(localStorage.getItem(CROSSHAIR_STORAGE_KEY) === '1'); } catch (e) {}
 
-  function toggleTab(name) {
-    var panel = document.getElementById('panel-' + name);
-    if (!panel) return;
-    var isOpen = panel.classList.contains('open');
-    document.querySelectorAll('.floating-panel').forEach(function(p){ p.classList.remove('open'); });
-    document.querySelectorAll('#sidebar .toolbar button, .tool-btn').forEach(function(b){ if (b.id && b.id.indexOf('btnTool') === 0) b.classList.remove('active-toggle'); });
+  /* --- Coordinate popup, shared by crosshair hotspot and Coords tool --- */
+  var COPY_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
+  var CHECK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>';
+  var LINK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><line x1="8.3" y1="10.8" x2="15.7" y2="7.2"/><line x1="8.3" y1="13.2" x2="15.7" y2="16.8"/></svg>';
 
-    if (!isOpen) {
-      panel.classList.add('open');
-      var trigger = document.getElementById('btnTool' + name.charAt(0).toUpperCase() + name.slice(1));
-      if (trigger) trigger.classList.add('active-toggle');
+  function buildCoordPopupHtml(lat, lng) {
+    var wgs = lat.toFixed(6) + ', ' + lng.toFixed(6);
+    return '' +
+      '<div class="coord-popup">' +
+        '<div class="cp-row"><span class="cp-label">WGS-84</span><span class="cp-val">' + wgs + '</span>' +
+          '<button class="cp-copy" data-copy="' + wgs + '" title="Copy">' + COPY_ICON_SVG + '</button></div>' +
+        '<button class="cp-share">' + LINK_ICON_SVG + ' Share link</button>' +
+      '</div>';
+  }
 
-      if (name === 'ruler') setActiveTool('ruler');
-      else if (name === 'coords') setActiveTool('coords');
-    } else {
-      setActiveTool(null);
+  function copyToClipboard(text, btn) {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+    navigator.clipboard.writeText(text).then(function() {
+      if (!btn) return;
+      var orig = btn.innerHTML;
+      btn.innerHTML = CHECK_ICON_SVG;
+      setTimeout(function(){ btn.innerHTML = orig; }, 1200);
+    });
+  }
+
+  function shareLinkFor(lat, lng, zoom) {
+    var url = new URL(location.href);
+    url.search = '';
+    url.searchParams.set('lat', lat.toFixed(6));
+    url.searchParams.set('lng', lng.toFixed(6));
+    url.searchParams.set('zoom', zoom);
+    return url.toString();
+  }
+
+  function openCoordPopupAt(latlng) {
+    var lat = latlng.lat, lng = latlng.lng;
+    var popup = L.popup({ className: 'polygon-edit-popup' })
+      .setLatLng(latlng)
+      .setContent(buildCoordPopupHtml(lat, lng))
+      .openOn(map);
+    setTimeout(function() {
+      var el = popup.getElement();
+      if (!el) return;
+      el.querySelectorAll('.cp-copy').forEach(function(btn){
+        btn.addEventListener('click', function(){ copyToClipboard(btn.dataset.copy, btn); });
+      });
+      var shareBtn = el.querySelector('.cp-share');
+      if (shareBtn) shareBtn.addEventListener('click', function(){
+        copyToClipboard(shareLinkFor(lat, lng, map.getZoom()));
+        shareBtn.innerHTML = CHECK_ICON_SVG + ' Link copied';
+        setTimeout(function(){ shareBtn.innerHTML = LINK_ICON_SVG + ' Share link'; }, 1500);
+      });
+    }, 0);
+  }
+  crosshairHotspot.addEventListener('click', function(){
+    crosshairHotspot.classList.add('tapped');
+    setTimeout(function(){ crosshairHotspot.classList.remove('tapped'); }, 200);
+    openCoordPopupAt(map.getCenter());
+  });
+
+  /* --- Control stack (top-right): sidebar toggle, basemap, theme, crosshair --- */
+  var SidebarToggleControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="15" y1="4" x2="15" y2="20"/></svg>';
+      btn.title = 'Show/hide sidebar';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){
+        var sidebar = document.getElementById('sidebar');
+        var isMobile = document.documentElement.getAttribute('data-device') === 'mobile';
+        sidebar.classList.toggle(isMobile ? 'expanded' : 'collapsed');
+        setTimeout(function(){ map.invalidateSize(); }, 260);
+      });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
     }
+  });
+  map.addControl(new SidebarToggleControl());
+
+  // Basemap icon control with a dropdown menu.
+  var BasemapControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var container = L.DomUtil.create('div', 'basemap-control-wrap');
+      var menu = L.DomUtil.create('div', 'basemap-control', container);
+      menu.style.display = 'none';
+      Object.keys(baseLayers).forEach(function(key){
+        var btn = L.DomUtil.create('button', key === currentBasemapKey ? 'active' : '', menu);
+        btn.textContent = baseLayers[key].label;
+        btn.dataset.key = key;
+        L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+        L.DomEvent.on(btn, 'click', function(){ setBasemap(key); });
+      });
+      var toggleBtn = L.DomUtil.create('div', 'basemap-toggle-btn', container);
+      toggleBtn.title = 'Switch basemap';
+      toggleBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L3 5v16l6-2 6 2 6-2V3l-6 2-6-2z"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/></svg>';
+      L.DomEvent.on(toggleBtn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(toggleBtn, 'click', function(){
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+      });
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      document.addEventListener('click', function(e){
+        if (menu.style.display !== 'none' && !container.contains(e.target)) menu.style.display = 'none';
+      });
+      return container;
+    }
+  });
+  map.addControl(new BasemapControl());
+
+  function setBasemap(key) {
+    if (key === currentBasemapKey) return;
+    map.removeLayer(baseLayers[currentBasemapKey].layer);
+    currentBasemapKey = key;
+    baseLayers[key].layer.addTo(map);
+    document.querySelectorAll('.basemap-control button').forEach(function(b){
+      b.classList.toggle('active', b.dataset.key === key);
+    });
   }
 
-  document.getElementById('btnToolRuler').addEventListener('click', function(){ toggleTab('ruler'); });
-  document.getElementById('btnToolDraw').addEventListener('click',  function(){ toggleTab('draw'); });
-  document.getElementById('btnToolCoord').addEventListener('click', function(){ toggleTab('coords'); });
-
-  document.querySelectorAll('.panel-close-btn').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      document.querySelectorAll('.floating-panel').forEach(function(p){ p.classList.remove('open'); });
-      document.querySelectorAll('#sidebar .toolbar button').forEach(function(b){ b.classList.remove('active-toggle'); });
-      setActiveTool(null);
-    });
+  // Theme icon button — moon in dark mode (click → light), sun in light mode.
+  var SUN_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></svg>';
+  var MOON_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>';
+  var ThemeControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.innerHTML = currentTheme() === 'light' ? MOON_ICON : SUN_ICON;
+      btn.title = 'Toggle light/dark theme';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){
+        var next = currentTheme() === 'light' ? 'dark' : 'light';
+        applyTheme(next);
+        btn.innerHTML = next === 'light' ? MOON_ICON : SUN_ICON;
+      });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
   });
+  map.addControl(new ThemeControl());
 
-  /* --- Floating panel dragging --- */
-  function makePanelDraggable(panelEl) {
-    var handle = panelEl.querySelector('.panel-drag-handle');
-    if (!handle) return;
-    var dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
-    handle.addEventListener('pointerdown', function(e){
-      dragging = true;
-      try { handle.setPointerCapture(e.pointerId); } catch(err){}
-      var r = panelEl.getBoundingClientRect();
-      sx = e.clientX; sy = e.clientY; sl = r.left; st = r.top;
-      panelEl.style.left = r.left + 'px';
-      panelEl.style.top = r.top + 'px';
-      panelEl.style.transform = 'none';
-      e.preventDefault();
-    });
-    handle.addEventListener('pointermove', function(e){
-      if (!dragging) return;
-      var r = panelEl.getBoundingClientRect();
-      var nl = sl + (e.clientX - sx);
-      var nt = st + (e.clientY - sy);
-      nl = Math.min(Math.max(nl, -r.width + 40), window.innerWidth - 40);
-      nt = Math.min(Math.max(nt, 0), window.innerHeight - 40);
-      panelEl.style.left = nl + 'px';
-      panelEl.style.top = nt + 'px';
-    });
-    function endDrag(e){ dragging = false; try { handle.releasePointerCapture(e.pointerId); } catch(err){} }
-    handle.addEventListener('pointerup', endDrag);
-    handle.addEventListener('pointercancel', endDrag);
-  }
-  ['panel-draw','panel-ruler','panel-coords'].forEach(function(id){
-    makePanelDraggable(document.getElementById(id));
+  // Crosshair toggle — same icon Playfra uses in its own top-right stack.
+  var CrosshairToggleControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.id = 'btnCrosshairToggle';
+      btn.title = 'Toggle crosshair';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><line x1="12" y1="2" x2="12" y2="6.5"/><line x1="12" y1="17.5" x2="12" y2="22"/><line x1="2" y1="12" x2="6.5" y2="12"/><line x1="17.5" y1="12" x2="22" y2="12"/></svg>';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){
+        setCrosshairVisible(!crosshairEl.classList.contains('active'));
+      });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
   });
-
-  /* --- Basemap radio picker --- */
-  var basemapContainer = document.getElementById('basemap-options');
-  Object.keys(baseLayers).forEach(function(key){
-    var label = document.createElement('label');
-    label.style.display = 'block';
-    label.style.marginBottom = '4px';
-    label.style.fontSize = '12px';
-    label.style.cursor = 'pointer';
-
-    var radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'basemap';
-    radio.checked = baseLayers[key] === currentBaseLayer;
-    radio.style.marginRight = '6px';
-    radio.style.accentColor = 'var(--accent)';
-
-    radio.addEventListener('change', function(){
-      if (!radio.checked) return;
-      map.removeLayer(currentBaseLayer);
-      currentBaseLayer = baseLayers[key];
-      map.addLayer(currentBaseLayer);
-    });
-
-    label.appendChild(radio);
-    label.appendChild(document.createTextNode(key));
-    basemapContainer.appendChild(label);
-  });
+  map.addControl(new CrosshairToggleControl());
+  // Reflect whatever was restored from storage onto the just-created button.
+  setCrosshairVisible(crosshairEl.classList.contains('active'));
 
   /* --- Layer loading --- */
   var mainLayers = {};
@@ -542,9 +723,21 @@
       file: 'russia.geojson',
       name: 'Russian-controlled territory',
       color: '#a52714',
+      outlineColor: '#ff0000',
       group: 'main',
-      noOutline: true,
-      smoothFactor: 2.0
+      noOutline: false,
+      smoothFactor: 2.0,
+      pane: 'territoryPane'
+    },
+    {
+      file: 'grayzone.geojson',
+      name: 'Gray zone',
+      color: '#c3c3c3',
+      outlineColor: '#b4b4b4',
+      group: 'main',
+      noOutline: false,
+      smoothFactor: 2.0,
+      pane: 'grayZonePane'
     }
   ];
 
@@ -552,7 +745,7 @@
     fetchGeoJSON(layerInfo.file)
       .then(function(data){
         var layer = L.geoJSON(data, {
-          pane: 'territoryPane',
+          pane: layerInfo.pane,
           smoothFactor: layerInfo.smoothFactor !== undefined ? layerInfo.smoothFactor : 1.0,
           style: function(){
             var style = {
@@ -586,10 +779,9 @@
         layer.addTo(map);
         updateSidebarLayerControl();
       })
-      .catch(function(err){ console.error('Layer load error:', err); });
+      .catch(function(err){ console.warn('Layer load error (' + layerInfo.file + '):', err); });
   });
 
-  /* --- Sidebar layer list --- */
   function updateSidebarLayerControl() {
     var container = document.getElementById('grouped-layer-container');
     if (!container) return;
@@ -597,7 +789,6 @@
 
     Object.keys(mainLayers).forEach(function(name){
       var layer = mainLayers[name];
-
       var row = document.createElement('div');
       row.className = 'overlay-row';
 
@@ -610,43 +801,197 @@
       });
 
       var lbl = document.createElement('label');
-      lbl.textContent = publicLayerLabel(name);
+      lbl.textContent = name;
       lbl.addEventListener('click', function(){ cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); });
 
       row.appendChild(cb);
       row.appendChild(lbl);
       container.appendChild(row);
     });
-
-    if (Object.keys(extraLayers).length) {
-      var heading = document.createElement('h3');
-      heading.style.marginTop = '10px';
-      heading.textContent = 'Extra';
-      container.appendChild(heading);
-
-      Object.keys(extraLayers).forEach(function(name){
-        var layer = extraLayers[name];
-        var row = document.createElement('div');
-        row.className = 'overlay-row';
-
-        var cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = map.hasLayer(layer);
-        cb.addEventListener('change', function(){
-          if (cb.checked) { if (!map.hasLayer(layer)) map.addLayer(layer); }
-          else { if (map.hasLayer(layer)) map.removeLayer(layer); }
-        });
-
-        var lbl = document.createElement('label');
-        lbl.textContent = name;
-        lbl.addEventListener('click', function(){ cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); });
-
-        row.appendChild(cb);
-        row.appendChild(lbl);
-        container.appendChild(row);
-      });
-    }
   }
+
+  /* --- Floating panels: mutually exclusive, right-anchored, draggable --- */
+  function closeAllPanels(except) {
+    document.querySelectorAll('.floating-panel').forEach(function(p){
+      if (p !== except) p.classList.remove('open');
+    });
+    document.querySelectorAll('#sidebar .toolbar button').forEach(function(b){
+      if (b.id && b.id.indexOf('btnTool') === 0) b.classList.remove('active-toggle');
+    });
+    setActiveTool(null);
+  }
+
+  function openPanel(name) {
+    var panel = document.getElementById('panel-' + name);
+    if (!panel) return;
+    var isOpen = panel.classList.contains('open');
+    closeAllPanels();
+    if (isOpen) return; // it was open, now closed — no reopen
+    panel.classList.add('open');
+    var trigger = document.getElementById('btnTool' + name.charAt(0).toUpperCase() + name.slice(1));
+    if (trigger) trigger.classList.add('active-toggle');
+    if (name === 'ruler') setActiveTool('ruler');
+    else if (name === 'coords') setActiveTool('coords');
+  }
+
+  document.getElementById('btnToolRuler').addEventListener('click', function(){ openPanel('ruler'); });
+  document.getElementById('btnToolDraw').addEventListener('click',  function(){ openPanel('draw'); });
+  document.getElementById('btnToolCoord').addEventListener('click', function(){ openPanel('coords'); });
+
+  document.querySelectorAll('.panel-close-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ closeAllPanels(); });
+  });
+
+  /* --- Floating panel dragging --- */
+  function makePanelDraggable(panelEl) {
+    var handle = panelEl.querySelector('.panel-drag-handle');
+    if (!handle) return;
+    var dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+    handle.addEventListener('pointerdown', function(e){
+      dragging = true;
+      try { handle.setPointerCapture(e.pointerId); } catch(err){}
+      var r = panelEl.getBoundingClientRect();
+      sx = e.clientX; sy = e.clientY; sl = r.left; st = r.top;
+      panelEl.style.right = 'auto';
+      panelEl.style.left = r.left + 'px';
+      panelEl.style.top = r.top + 'px';
+      e.preventDefault();
+    });
+    handle.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      var r = panelEl.getBoundingClientRect();
+      var nl = sl + (e.clientX - sx);
+      var nt = st + (e.clientY - sy);
+      nl = Math.min(Math.max(nl, -r.width + 40), window.innerWidth - 40);
+      nt = Math.min(Math.max(nt, 0), window.innerHeight - 40);
+      panelEl.style.left = nl + 'px';
+      panelEl.style.top = nt + 'px';
+    });
+    function endDrag(e){ dragging = false; try { handle.releasePointerCapture(e.pointerId); } catch(err){} }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+  }
+  ['panel-draw','panel-ruler','panel-coords'].forEach(function(id){
+    makePanelDraggable(document.getElementById(id));
+  });
+
+  /* --- Search box (top-center) --- */
+  var searchInput = document.getElementById('searchInput');
+  var searchResultsEl = document.getElementById('searchResults');
+  var searchClearBtn = document.getElementById('searchClearBtn');
+  var searchMarker = null;
+  var searchDebounce = null;
+  var searchAbort = null;
+
+  function parseLatLngInput(q) {
+    var m = q.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if (!m) return null;
+    var lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return { lat: lat, lng: lng };
+  }
+
+  function updateSearchClearBtn() {
+    searchClearBtn.style.display = (searchInput.value || searchMarker) ? 'flex' : 'none';
+  }
+
+  function clearSearchMarker() {
+    if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
+    updateSearchClearBtn();
+  }
+
+  function goToResult(lat, lng, label, zoom) {
+    map.setView([lat, lng], zoom || Math.max(map.getZoom(), 12));
+    clearSearchMarker();
+    searchMarker = L.circleMarker([lat, lng], {
+      radius: 8, color: '#fff', weight: 2, fillColor: '#ff6a00', fillOpacity: 1, pane: 'markersPane'
+    }).addTo(map).bindPopup(label).openPopup();
+    updateSearchClearBtn();
+    searchResultsEl.style.display = 'none';
+    searchInput.value = label || (lat.toFixed(5) + ', ' + lng.toFixed(5));
+    updateSearchClearBtn();
+  }
+
+  function renderSearchResults(items) {
+    if (!items.length) { searchResultsEl.style.display = 'none'; searchResultsEl.innerHTML = ''; return; }
+    searchResultsEl.innerHTML = items.map(function(it, i){
+      return '<div class="search-result" data-idx="' + i + '">' +
+        '<div class="sr-main">' + escapeHtml(it.main) + '</div>' +
+        (it.sub ? '<div class="sr-sub">' + escapeHtml(it.sub) + '</div>' : '') +
+      '</div>';
+    }).join('');
+    searchResultsEl.style.display = 'block';
+    searchResultsEl.querySelectorAll('.search-result').forEach(function(el, i){
+      el.addEventListener('click', function(){
+        var it = items[i];
+        goToResult(it.lat, it.lng, it.main, it.zoom);
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function runSearch(query, autoGo) {
+    var q = query.trim();
+    if (!q) { searchResultsEl.style.display = 'none'; return; }
+
+    var coordHit = parseLatLngInput(q);
+    if (coordHit) {
+      var item = { main: coordHit.lat.toFixed(5) + ', ' + coordHit.lng.toFixed(5), sub: 'Coordinates', lat: coordHit.lat, lng: coordHit.lng, zoom: 15 };
+      if (autoGo) goToResult(item.lat, item.lng, item.main, item.zoom);
+      else renderSearchResults([item]);
+      return;
+    }
+    if (q.length < 3) { searchResultsEl.style.display = 'none'; return; }
+    if (searchAbort) searchAbort.abort();
+    searchAbort = new AbortController();
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&accept-language=en&q=' + encodeURIComponent(q), { signal: searchAbort.signal })
+      .then(function(r){ return r.json(); })
+      .then(function(results){
+        var items = results.map(function(r){
+          return {
+            main: r.display_name.split(',')[0],
+            sub: r.display_name,
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lon),
+            zoom: 13
+          };
+        });
+        if (autoGo) { if (items.length) goToResult(items[0].lat, items[0].lng, items[0].main, items[0].zoom); }
+        else renderSearchResults(items);
+      })
+      .catch(function(err){ if (err.name !== 'AbortError' && !autoGo) renderSearchResults([]); });
+  }
+
+  searchInput.addEventListener('input', function(){
+    updateSearchClearBtn();
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(function(){ runSearch(searchInput.value); }, 350);
+  });
+  searchInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') { clearTimeout(searchDebounce); runSearch(searchInput.value, true); }
+    if (e.key === 'Escape') { searchResultsEl.style.display = 'none'; searchInput.blur(); }
+  });
+  searchClearBtn.addEventListener('click', function(){
+    searchInput.value = '';
+    clearSearchMarker();
+    searchResultsEl.style.display = 'none';
+    searchInput.focus();
+  });
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('#searchBox')) searchResultsEl.style.display = 'none';
+  });
+
+  /* --- Mobile / desktop sidebar tap --- */
+  document.querySelector('.sidebar-header').addEventListener('click', function(){
+    if (document.documentElement.getAttribute('data-device') === 'mobile') {
+      document.getElementById('sidebar').classList.toggle('expanded');
+    }
+  });
 
   /* --- Draw tools --- */
   var activeTool = null;
@@ -659,10 +1004,13 @@
   var userDrawings = L.layerGroup().addTo(map);
   extraLayers['My Drawings'] = userDrawings;
 
-  function attachEraser(layer) {
+  // attachEraser: eraseSubLayer may be a sub-layer (line or arrowhead) whose
+  // removal should remove the WHOLE owning group — that's what fixes the
+  // "eraser on arrows only removes one half" bug.
+  function attachEraser(layer, owningGroup) {
     layer.on('click', function(e){
       if (activeTool === 'eraser') {
-        userDrawings.removeLayer(layer);
+        userDrawings.removeLayer(owningGroup || layer);
         L.DomEvent.stopPropagation(e);
       }
     });
@@ -726,7 +1074,7 @@
       rectangle: "Click one corner, then click opposite corner.",
       'flag-ua': "Click anywhere on the map to drop a Ukraine flag marker.",
       'flag-ru': "Click anywhere on the map to drop a Russia flag marker.",
-      eraser: "Click on any drawn shape or line to erase it.",
+      eraser: "Click on any drawn shape or line to erase it (arrows erase as a whole).",
       ruler: "Click points on the map to measure distance.",
       coords: "Click anywhere on the map to display its precise coordinates."
     };
@@ -799,33 +1147,17 @@
   function selectCoordinate(latlng) {
     var latText = latlng.lat.toFixed(5);
     var lngText = latlng.lng.toFixed(5);
-    var copyButton =
-      '<button class="coords-copy-btn" type="button" ' +
-      'onclick="copyCoordinates(' + latText + ', ' + lngText + ', this)">Copy coordinates</button>';
 
     clearCoordMarker();
     coordMarker = L.circleMarker(latlng, {
       radius: 7, color: '#ffffff', weight: 2, fillColor: '#ff0000', fillOpacity: 1, pane: 'markersPane'
     }).addTo(map);
 
-    coordMarker.bindPopup('Lat: ' + latText + '<br>Lng: ' + lngText + '<br>' + copyButton).openPopup();
+    coordMarker.bindPopup(buildCoordPopupHtml(latlng.lat, latlng.lng), { className: 'polygon-edit-popup' }).openPopup();
 
     document.getElementById('coords-result').innerHTML =
-      'Lat: ' + latText + ', Lng: ' + lngText + '<br>' + copyButton;
+      'Lat: ' + latText + ', Lng: ' + lngText;
   }
-
-  window.copyCoordinates = function(lat, lng, btn) {
-    var text = lat + ', ' + lng;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function(){
-        if (btn) {
-          var orig = btn.textContent;
-          btn.textContent = 'Copied!';
-          setTimeout(function(){ btn.textContent = orig; }, 1200);
-        }
-      });
-    }
-  };
 
   map.getContainer().addEventListener('click', function(ev){
     if (activeTool !== 'coords') return;
@@ -909,6 +1241,7 @@
     if (isDashed) options.dashArray = '6, 6';
     var line = L.polyline([start, end], options);
     group.addLayer(line);
+
     var p1 = map.latLngToLayerPoint(start);
     var p2 = map.latLngToLayerPoint(end);
     var angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
@@ -921,7 +1254,11 @@
       { color: color, fillColor: color, fillOpacity: 1 }
     );
     group.addLayer(head);
-    attachEraser(line); attachEraser(head);
+
+    // Both sub-layers erase the WHOLE group, not just themselves.
+    attachEraser(line, group);
+    attachEraser(head, group);
+
     userDrawings.addLayer(group);
   }
 
@@ -931,6 +1268,7 @@
     if (isDashed) options.dashArray = '6, 6';
     var line = L.polyline(pts, options);
     group.addLayer(line);
+
     var endPt = pts[pts.length - 1];
     var prevPt = pts[Math.max(0, pts.length - 5)];
     var p1 = map.latLngToLayerPoint(prevPt);
@@ -945,7 +1283,10 @@
       { color: color, fillColor: color, fillOpacity: 1 }
     );
     group.addLayer(head);
-    attachEraser(line); attachEraser(head);
+
+    attachEraser(line, group);
+    attachEraser(head, group);
+
     userDrawings.addLayer(group);
   }
 
