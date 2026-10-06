@@ -115,34 +115,8 @@
     .overlay-row label{flex:1;cursor:pointer;}
     .overlay-row input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
 
-    .credit-block{
-      display:flex;flex-direction:column;gap:6px;align-items:flex-end;
-      padding:12px 14px;margin-top:auto;border-top:1px solid var(--border);
-    }
-    .version-tag{font-size:9.5px;color:var(--sub);opacity:.55;letter-spacing:.02em;}
-    .credit-block a{
-      display:inline-flex;align-items:center;gap:5px;color:var(--sub);font-size:11px;
-      text-decoration:none;transition:color .12s;
-    }
-    .credit-block a:hover{color:var(--accent);}
-
-    ::-webkit-scrollbar{width:8px;}
-    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-
-    /* Snapshot panel — always visible, purely decorative for now. */
-    #snapshotPanel{
-      position:fixed;
-      left:14px;
-      top:50%;
-      transform:translateY(-50%);
-      z-index:1200;
-      width:min(300px,calc(100vw - 28px));
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      pointer-events:auto;
-    }
-
+    /* Snapshot section — now inside the sidebar, below Layers. */
+    .snapshot-section{padding:10px 12px;border-bottom:1px solid var(--border);}
     #snapshotDescBox{
       background:#1a1f2b;
       border:2px solid #2d5aed;
@@ -157,12 +131,18 @@
       word-wrap:break-word;
       overflow-wrap:break-word;
     }
+    :root[data-theme="light"] #snapshotDescBox{
+      background:#eef3ff;
+      color:#2d5aed;
+    }
     #snapshotDescBox .snapshot-placeholder{ color:#6b8cff; opacity:.85; }
+    :root[data-theme="light"] #snapshotDescBox .snapshot-placeholder{ color:#2d5aed; }
     #snapshotDescBox .snapshot-meta{
       display:block; color:#8ba7ff; font-size:11px; margin-top:8px; opacity:.7;
     }
+    :root[data-theme="light"] #snapshotDescBox .snapshot-meta{ color:#4a72c9; }
 
-    #snapshotNavRow{ display:flex; gap:10px; align-items:stretch; }
+    #snapshotNavRow{ display:flex; gap:10px; align-items:stretch; margin-top:8px; }
     .snapshot-nav-btn{
       flex:1;
       background:transparent;
@@ -200,7 +180,22 @@
       color:var(--sub);
       text-align:center;
       letter-spacing:.02em;
+      margin-top:6px;
     }
+
+    .credit-block{
+      display:flex;flex-direction:column;gap:6px;align-items:flex-end;
+      padding:12px 14px;margin-top:auto;border-top:1px solid var(--border);
+    }
+    .version-tag{font-size:9.5px;color:var(--sub);opacity:.55;letter-spacing:.02em;}
+    .credit-block a{
+      display:inline-flex;align-items:center;gap:5px;color:var(--sub);font-size:11px;
+      text-decoration:none;transition:color .12s;
+    }
+    .credit-block a:hover{color:var(--accent);}
+
+    ::-webkit-scrollbar{width:8px;}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
     .floating-panel{
       position:fixed;top:64px;right:320px;z-index:1200;display:none;
@@ -238,7 +233,6 @@
     .color-btn.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;font-weight:600;}
     .panel-result{margin-top:8px;font-size:12px;color:var(--sub);min-height:24px;line-height:1.45;}
 
-    /* Ruler panel — Playfra style */
     #rulerPanel{
       position:fixed;top:64px;right:320px;z-index:1200;display:none;
       background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px #0007;
@@ -348,10 +342,6 @@
     :root[data-device="mobile"] #rulerPanel{
       right:12px; left:12px; top:auto; bottom:80px; width:auto;
     }
-    :root[data-device="mobile"] #snapshotPanel{
-      left:12px; right:12px; top:auto; bottom:80px; transform:none;
-      width:auto;
-    }
     :root[data-device="mobile"] #snapshotDescBox{ min-height:90px; font-size:13.5px; }
   </style>
 </head>
@@ -400,6 +390,27 @@
       <div id="grouped-layer-container"></div>
     </div>
 
+    <!-- Snapshot section — design only, no function yet -->
+    <div class="snapshot-section">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);margin:0 0 8px;">Snapshots</h3>
+      <div id="snapshotDescBox">
+        <span class="snapshot-placeholder">Snapshot description</span>
+      </div>
+      <div id="snapshotNavRow">
+        <button class="snapshot-nav-btn" id="btnSnapPrev" title="Previous snapshot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="snapshot-nav-btn" id="btnSnapNext" title="Next snapshot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button id="snapshotLockBtn" title="Lock snapshot navigation">
+          <svg class="icon-unlocked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
+          <svg class="icon-locked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </button>
+      </div>
+      <div id="snapshotMeta">Unlocked</div>
+    </div>
+
     <div class="credit-block">
       <a href="https://x.com/polrad_mapping_" target="_blank" rel="noopener">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-7l-5.5-6.9L4.2 22H1l8.1-9.3L1 2h7.2l5 6.3L18.9 2zm-1.2 18h1.7L6.4 4H4.6l13.1 16z"/></svg>
@@ -409,26 +420,6 @@
     </div>
   </div>
 
-</div>
-
-<!-- Snapshot panel — design only, no function yet -->
-<div id="snapshotPanel">
-  <div id="snapshotDescBox">
-    <span class="snapshot-placeholder">Snapshot description</span>
-  </div>
-  <div id="snapshotNavRow">
-    <button class="snapshot-nav-btn" id="btnSnapPrev" title="Previous snapshot">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <button class="snapshot-nav-btn" id="btnSnapNext" title="Next snapshot">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-    </button>
-    <button id="snapshotLockBtn" title="Lock snapshot navigation">
-      <svg class="icon-unlocked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
-      <svg class="icon-locked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-    </button>
-  </div>
-  <div id="snapshotMeta">Unlocked</div>
 </div>
 
 <div id="searchBox">
@@ -444,7 +435,6 @@
   <div id="searchResults"></div>
 </div>
 
-<!-- Ruler panel — Playfra style -->
 <div id="rulerPanel">
   <div class="panel-drag-handle" title="Drag to move"></div>
   <button class="panel-close-btn" title="Close">×</button>
@@ -456,7 +446,6 @@
   </button>
 </div>
 
-<!-- Floating Draw panel -->
 <div class="floating-panel" id="panel-draw">
   <div class="panel-drag-handle" title="Drag to move"></div>
   <button class="panel-close-btn" title="Close">×</button>
@@ -501,7 +490,6 @@
   <div class="panel-result" id="draw-result">Select a shape to draw.</div>
 </div>
 
-<!-- Floating Coords panel -->
 <div class="floating-panel" id="panel-coords">
   <div class="panel-drag-handle" title="Drag to move"></div>
   <button class="panel-close-btn" title="Close">×</button>
@@ -511,7 +499,6 @@
 
 <script>
 
-  /* --- Theme --- */
   function currentTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
   function applyTheme(theme){
     if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
@@ -519,7 +506,6 @@
     try { localStorage.setItem('polradTheme_v1', theme); } catch (e) {}
   }
 
-  /* --- Map --- */
   var esriHybrid = L.layerGroup([
     L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -555,7 +541,6 @@
     position: 'bottomleft', metric: true, imperial: true, maxWidth: 150
   }).addTo(map);
 
-  /* --- Panes --- */
   map.createPane('territoryPane');
   map.getPane('territoryPane').style.zIndex = 420;
   map.createPane('grayZonePane');
@@ -573,7 +558,6 @@
     };
   });
 
-  /* --- Crosshair --- */
   var CROSSHAIR_STORAGE_KEY = 'polradCrosshair_v1';
   var crosshairEl = document.getElementById('crosshair');
   var crosshairHotspot = crosshairEl.querySelector('.ch-hotspot');
@@ -585,7 +569,6 @@
   }
   try { setCrosshairVisible(localStorage.getItem(CROSSHAIR_STORAGE_KEY) === '1'); } catch (e) {}
 
-  /* --- Coordinate popup --- */
   var COPY_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
   var CHECK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>';
   var LINK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><line x1="8.3" y1="10.8" x2="15.7" y2="7.2"/><line x1="8.3" y1="13.2" x2="15.7" y2="16.8"/></svg>';
@@ -645,7 +628,6 @@
     openCoordPopupAt(map.getCenter());
   });
 
-  /* --- Control stack (top-right) --- */
   var SidebarToggleControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -770,7 +752,6 @@
   });
   map.addControl(new DeviceControl());
 
-  /* --- Layer loading --- */
   var mainLayers = {};
   var extraLayers = {};
   var layerFiles = [
@@ -877,7 +858,6 @@
     });
   }
 
-  /* --- Floating panels --- */
   function closeAllPanels(except) {
     document.querySelectorAll('.floating-panel').forEach(function(p){
       if (p !== except) p.classList.remove('open');
@@ -938,7 +918,6 @@
     makePanelDraggable(document.getElementById(id));
   });
 
-  /* --- Ruler (Playfra-style) --- */
   var rulerPoints = [];
   var rulerClosed = false;
   var rulerRedoPoints = [];
@@ -1029,7 +1008,6 @@
     if (activeTool === 'ruler') { L.DomEvent.preventDefault(e.originalEvent); redrawRuler(); }
   });
 
-  /* --- Search --- */
   var searchInput = document.getElementById('searchInput');
   var searchResultsEl = document.getElementById('searchResults');
   var searchClearBtn = document.getElementById('searchClearBtn');
@@ -1132,7 +1110,6 @@
     }
   });
 
-  /* --- Draw tools --- */
   var activeTool = null;
   var currentColor = '#ff0000';
   var currentThickness = 3;
