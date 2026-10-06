@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Russo-Ukrainian War Map (Polrad Mapping)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --panel-bg: #1b1b1b;
+      --panel-text: #f5f5f5;
+      --panel-border: rgba(255,255,255,0.15);
+      --panel-heading-border: rgba(255,255,255,0.15);
+      --btn-bg: #2a2a2a;
+      --btn-bg-hover: #383838;
+      --btn-border: #555555;
+      --btn-text: #f0f0f0;
+      --result-text: #cccccc;
+      --muted-text: #aaaaaa;
+      --chrome-bg: #171717;
+      --chrome-btn-bg: #2a2a2a;
+      --chrome-text: #ffffff;
+      --chrome-border: rgba(255,255,255,0.2);
+      --link-color: #64b5f6;
+    }
+
+    body.light-mode {
+      --panel-bg: #ffffff;
+      --panel-text: #222222;
+      --panel-border: rgba(0,0,0,0.2);
+      --panel-heading-border: #dddddd;
+      --btn-bg: #f5f5f5;
+      --btn-bg-hover: #e8e8e8;
+      --btn-border: #999999;
+      --btn-text: #333333;
+      --result-text: #333333;
+      --muted-text: #555555;
+      --chrome-bg: #ffffff;
+      --chrome-btn-bg: #f0f0f0;
+      --chrome-text: #171717;
+      --chrome-border: rgba(0,0,0,0.2);
+      --link-color: #1976d2;
+    }
+
+    .no-select-mode, .no-select-mode * {
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Helvetica, Arial, sans-serif;
+      background: #f4f4f4;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 60px;
+    }
+
+    #left-sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 60px;
+      background: var(--chrome-bg);
+      border-right: 2px solid rgba(0,0,0,0.2);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      gap: 15px;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    }
+
+    .sidebar-btn {
+      width: 44px;
+      height: 44px;
+      background: var(--chrome-btn-bg);
+      border: 1px solid var(--chrome-border);
+      border-radius: 6px;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--chrome-text);
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .sidebar-btn:hover {
+      background: var(--btn-bg-hover);
+    }
+
+    .sidebar-btn.active {
+      background: #555;
+      border-color: #777;
+      color: white;
+    }
+
+    .leaflet-control-zoom a {
+      background-color: var(--chrome-bg) !important;
+      color: var(--chrome-text) !important;
+      border-color: var(--chrome-border) !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background-color: var(--chrome-btn-bg) !important;
+      color: var(--chrome-text) !important;
+    }
+
+    #app-header {
+      position: absolute;
+      top: 10px;
+      left: 72px;
+      z-index: 2100;
+      background: var(--chrome-bg);
+      color: var(--chrome-text);
+      border: 1px solid var(--chrome-border);
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      overflow: visible;
+      width: 390px;
+      max-width: calc(100vw - 90px);
+    }
+
+    #app-header-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+
+    #app-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    #app-title-text {
+      font-weight: bold;
+      font-size: 14px;
+      letter-spacing: 0.3px;
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    #language-toggle {
+      display: flex;
+      gap: 2px;
+      flex-shrink: 0;
+      background: var(--chrome-btn-bg);
+      border: 1px solid var(--chrome-border);
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .lang-btn {
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--chrome-text);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 5px;
+      cursor: pointer;
+    }
+
+    .lang-btn.active {
+      background: var(--btn-bg-hover);
+    }
+
+    #search-toggle-btn {
+      background: var(--chrome-btn-bg);
+      border: 1px solid var(--chrome-border);
+      color: var(--chrome-text);
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    #search-toggle-btn:hover {
+      background: var(--btn-bg-hover);
+    }
+
+    #app-header-search {
+      display: none;
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      width: 350px;
+      max-width: calc(100vw - 90px);
+      box-sizing: border-box;
+      background: var(--chrome-bg);
+      border: 1px solid var(--chrome-border);
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      z-index: 2200;
+    }
+
+    #app-header-search.show {
+      display: block;
+    }
+
+    #header-search-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    #header-search-input {
+      flex: 1;
+      min-width: 0;
+      height: 30px;
+      box-sizing: border-box;
+      border: 1px solid var(--chrome-border);
+      border-radius: 5px;
+      padding: 0 8px;
+      background: var(--chrome-btn-bg);
+      color: var(--chrome-text);
+      outline: none;
+      font-size: 12px;
+    }
+
+    #header-search-go {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--chrome-border);
+      border-radius: 5px;
+      background: var(--chrome-btn-bg);
+      color: var(--chrome-text);
+      cursor: pointer;
+    }
+
+    #header-search-results {
+      display: none;
+      margin-top: 5px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    #header-search-results.show {
+      display: block;
+    }
+
+    .header-search-result {
+      padding: 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      color: var(--chrome-text);
+      font-size: 12px;
+    }
+
+    .header-search-result:hover {
+      background: var(--btn-bg-hover);
+    }
+
+    #map-crosshair {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: calc(50% + 30px);
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1500;
+    }
+
+    #map-crosshair::before,
+    #map-crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    }
+
+    #map-crosshair::before {
+      top: 11px;
+      left: 0;
+      width: 24px;
+      height: 2px;
+    }
+
+    #map-crosshair::after {
+      top: 0;
+      left: 11px;
+      width: 2px;
+      height: 24px;
+    }
+
+    .sidebar-panel {
+      display: none;
+      position: absolute;
+      top: 90px;
+      left: 75px;
+      z-index: 1900;
+      background: var(--panel-bg);
+      color: var(--panel-text);
+      border: 2px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 12px;
+      width: 250px;
+      max-height: calc(100vh - 110px);
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .sidebar-panel.show {
+      display: block;
+    }
+
+    .sidebar-panel h4 {
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      border-bottom: 1px solid var(--panel-heading-border);
+      padding-bottom: 6px;
+    }
+
+    .tool-group-header {
+      font-weight: bold;
+      font-size: 13px;
+      margin: 10px 0 4px 0;
+      border-bottom: 1px solid var(--panel-heading-border);
+      padding-bottom: 2px;
+    }
+
+    .tool-btn {
+      display: block;
+      width: 100%;
+      margin-bottom: 6px;
+      padding: 6px 8px;
+      font-size: 13px;
+      border: 1px solid var(--btn-border);
+      border-radius: 3px;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .tool-btn:hover {
+      background: var(--btn-bg-hover);
+    }
+
+    .tool-btn.active {
+      background: #333;
+      color: white;
+      border-color: #333;
+    }
+
+    #color-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .thickness-row {
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+
+    .thickness-row label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      font-weight: bold;
+    }
+
+    .thickness-row input[type=range] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .unit-row {
+      margin-bottom: 8px;
+    }
+
+    .color-btn,
+    .unit-btn {
+      display: block;
+      padding: 6px 4px;
+      font-size: 12px;
+      border: 2px solid var(--btn-border);
+      border-radius: 3px;
+      cursor: pointer;
+      text-align: center;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      box-sizing: border-box;
+    }
+
+    .unit-btn {
+      display: inline-block;
+      width: 47%;
+    }
+
+    .color-btn.selected,
+    .unit-btn.selected {
+      border-color: #000;
+      font-weight: bold;
+    }
+
+    .panel-result {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--result-text);
+      min-height: 24px;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .settings-row label {
+      cursor: pointer;
+    }
+
+    .settings-link-row {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--panel-heading-border);
+      font-size: 13px;
+    }
+
+    .settings-link-row a {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--link-color);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .settings-link-row a:hover {
+      opacity: 0.8;
+    }
+
+    .leaflet-bottom.leaflet-left {
+      left: 70px;
+      bottom: 10px;
+    }
+
+    .leaflet-control-scale-line {
+      background: rgba(23, 23, 23, 0.85) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      border-top: none !important;
+      padding: 2px 5px !important;
+      font-size: 11px !important;
+      font-weight: bold;
+    }
+
+    .leaflet-control-layers {
+      display: none !important;
+    }
+
+    .coords-copy-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 10px;
+      border: 1px solid #777;
+      border-radius: 4px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .coords-copy-btn:hover {
+      background: #555;
+    }
+
+    #watermark-overlay {
+      position: absolute;
+      top: 0;
+      left: 60px;
+      right: 0;
+      bottom: 0;
+      z-index: 750;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='160'><text x='10' y='90' font-family='Helvetica, Arial, sans-serif' font-size='22' font-weight='bold' fill='%23ffffff' fill-opacity='0.18' stroke='%23000000' stroke-opacity='0.10' stroke-width='0.5' transform='rotate(-25 160 80)'>POLRAD MAPPING</text></svg>");
+      background-repeat: repeat;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div id="left-sidebar">
+    <button class="sidebar-btn" id="btn-tab-layers" onclick="toggleTab('layers')" title="Layers & Basemaps">🗺️</button>
+    <button class="sidebar-btn" id="btn-tab-draw" onclick="toggleTab('draw')" title="Draw Tools">✏️</button>
+    <button class="sidebar-btn" id="btn-tab-ruler" onclick="toggleTab('ruler')" title="Ruler / Measure">📏</button>
+    <button class="sidebar-btn" id="btn-tab-coords" onclick="toggleTab('coords')" title="Coordinates">📍</button>
+    <button class="sidebar-btn" id="btn-tab-settings" onclick="toggleTab('settings')" title="Settings">⚙️</button>
+    <button class="sidebar-btn" id="btn-fullscreen" onclick="toggleFullScreen()" title="Toggle Fullscreen">⛶</button>
+  </div>
+
+  <div id="app-header">
+    <div id="app-header-top">
+      <img id="app-logo" src="https://pbs.twimg.com/profile_images/2093664692505870336/xNyRmIXM_400x400.jpg" alt="Polrad Mapping">
+      <span id="app-title-text">POLRAD MAPPING</span>
+      <div id="language-toggle" title="Language"><button type="button" id="lang-en" class="lang-btn">EN</button><button type="button" id="lang-ru" class="lang-btn">RU</button></div><button id="search-toggle-btn" onclick="toggleHeaderSearch()" title="Search">🔍</button>
+    </div>
+
+<div id="app-header-search">
+  <div id="header-search-row">
+    <input id="header-search-input" type="text" placeholder="Search town, city or coordinates..." autocomplete="off">
+    <button id="header-search-go" type="button">↵</button>
+  </div>
+  <div id="header-search-results"></div>
+</div>
+
+  </div>
+
+  <div id="map"></div>
+  <div id="map-crosshair"></div>
+  <div id="watermark-overlay"></div>
+
+  <div class="sidebar-panel" id="panel-layers">
+    <h4>Basemaps & Layers</h4>
+
+<div id="basemap-selector-container">
+  <strong>Base Map</strong>
+  <div id="basemap-options" style="margin-top: 6px; margin-bottom: 10px; font-size: 13px;"></div>
+</div>
+
+<div id="grouped-layer-container"></div>
+
+  </div>
+
+  <div class="sidebar-panel" id="panel-draw">
+    <h4>Draw Tools</h4>
+
+<div class="tool-group-header">Solid Tools</div>
+
+<button class="tool-btn" id="btn-freehand" onclick="setActiveTool('freehand')">Freehand</button>
+<button class="tool-btn" id="btn-freehand-arrow" onclick="setActiveTool('freehand-arrow')">Freehand Arrow</button>
+<button class="tool-btn" id="btn-line" onclick="setActiveTool('line')">Line</button>
+<button class="tool-btn" id="btn-arrow" onclick="setActiveTool('arrow')">Arrow</button>
+
+<div class="tool-group-header">Dashed Tools</div>
+
+<button class="tool-btn" id="btn-dashed-freehand" onclick="setActiveTool('dashed-freehand')">Dashed Freehand</button>
+<button class="tool-btn" id="btn-dashed-freehand-arrow" onclick="setActiveTool('dashed-freehand-arrow')">Dashed Freehand Arrow</button>
+<button class="tool-btn" id="btn-dashed-line" onclick="setActiveTool('dashed-line')">Dashed Line</button>
+<button class="tool-btn" id="btn-dashed-arrow" onclick="setActiveTool('dashed-arrow')">Dashed Arrow</button>
+
+<div class="tool-group-header">Shapes & Utilities</div>
+
+<button class="tool-btn" id="btn-polygon" onclick="setActiveTool('polygon')">Polygon</button>
+<button class="tool-btn" id="btn-rectangle" onclick="setActiveTool('rectangle')">Rectangle</button>
+<button class="tool-btn" id="btn-flag-ua" onclick="setActiveTool('flag-ua')">🇺🇦 Ukraine Flag</button>
+<button class="tool-btn" id="btn-flag-ru" onclick="setActiveTool('flag-ru')">🇷🇺 Russia Flag</button>
+<button class="tool-btn" id="btn-eraser" onclick="setActiveTool('eraser')">Eraser</button>
+
+<div class="thickness-row" style="margin-top: 10px;">
+  <label>Thickness: <span id="thickness-val">3px</span></label>
+  <input type="range" id="thickness-slider" min="1" max="15" value="3" oninput="setThickness(this.value)">
+</div>
+
+<div id="color-row">
+  <span class="color-btn selected" id="color-red" style="background:#ff0000; color:white;" onclick="setColor('#ff0000')">Red</span>
+  <span class="color-btn" id="color-blue" style="background:#0000ff; color:white;" onclick="setColor('#0000ff')">Blue</span>
+  <span class="color-btn" id="color-green" style="background:#2ecc71; color:white;" onclick="setColor('#2ecc71')">Green</span>
+  <span class="color-btn" id="color-yellow" style="background:#f1c40f; color:black;" onclick="setColor('#f1c40f')">Yellow</span>
+  <span class="color-btn" id="color-black" style="background:#171717; color:white;" onclick="setColor('#171717')">Black</span>
+  <span class="color-btn" id="color-white" style="background:#ffffff; color:black;" onclick="setColor('#ffffff')">White</span>
+</div>
+
+<button class="tool-btn" onclick="finishShape()">Finish Shape</button>
+<button class="tool-btn" onclick="clearDrawings()">Clear My Drawings</button>
+
+<div class="panel-result" id="draw-result">Select a shape to draw.</div>
+
+  </div>
+
+  <div class="sidebar-panel" id="panel-ruler">
+    <h4>Ruler (Measure)</h4>
+
+<div class="unit-row">
+  <span class="unit-btn selected" id="unit-km" onclick="setMeasurementUnit('km')">Kilometers (km)</span>
+  <span class="unit-btn" id="unit-mi" onclick="setMeasurementUnit('mi')">Miles (mi)</span>
+</div>
+
+<button class="tool-btn" onclick="finishShape()">Finish Measuring</button>
+<button class="tool-btn" onclick="clearDrawings()">Clear Line</button>
+
+<div class="panel-result" id="ruler-result">
+  Click points on the map to measure distance.
+</div>
+
+  </div>
+
+  <div class="sidebar-panel" id="panel-coords">
+    <h4>Coordinates</h4>
+
+<div class="panel-result" id="coords-result">
+  Click anywhere on the map to display its precise coordinates.
+</div>
+
+  </div>
+
+  <div class="sidebar-panel" id="panel-settings">
+    <h4>Settings</h4>
+
+<div class="settings-row">
+  <label id="toggle-dark-theme-label" for="toggle-dark-theme">Dark theme</label>
+  <input type="checkbox" id="toggle-dark-theme" checked onchange="setDarkTheme(this.checked)">
+</div>
+
+<div class="settings-row">
+  <label id="toggle-crosshair-label" for="toggle-crosshair">Center crosshair</label>
+  <input type="checkbox" id="toggle-crosshair" onchange="toggleCrosshairSetting(this.checked)">
+</div>
+
+<div class="settings-link-row">
+  <a id="twitter-link" href="https://x.com/polrad_mapping_" target="_blank" rel="noopener">Twitter/X</a>
+</div>
+
+  </div>
+
+  <script>
+
+    var publicLanguage = localStorage.getItem('polrad_language') === 'ru' ? 'ru' : 'en';
+
+    var PUBLIC_TRANSLATIONS = {
+      en: {
+        search: 'Search', searchPlaceholder: 'Search town, city or coordinates...',
+        basemapsLayers: 'Basemaps & Layers', baseMap: 'Base Map',
+        drawTools: 'Draw Tools', solidTools: 'Solid Tools', dashedTools: 'Dashed Tools', shapesUtilities: 'Shapes & Utilities',
+        freehand: 'Freehand', freehandArrow: 'Freehand Arrow', line: 'Line', arrow: 'Arrow',
+        dashedFreehand: 'Dashed Freehand', dashedFreehandArrow: 'Dashed Freehand Arrow', dashedLine: 'Dashed Line', dashedArrow: 'Dashed Arrow',
+        polygon: 'Polygon', rectangle: 'Rectangle', ukraineFlag: '🇺🇦 Ukraine Flag', russiaFlag: '🇷🇺 Russia Flag', eraser: 'Eraser',
+        thickness: 'Thickness', red: 'Red', blue: 'Blue', green: 'Green', yellow: 'Yellow', black: 'Black', white: 'White',
+        finishShape: 'Finish Shape', clearDrawings: 'Clear My Drawings', selectShape: 'Select a shape to draw.',
+        ruler: 'Ruler (Measure)', kilometers: 'Kilometers (km)', miles: 'Miles (mi)', finishMeasuring: 'Finish Measuring', clearLine: 'Clear Line',
+        measurePrompt: 'Click points on the map to measure distance.', coordinates: 'Coordinates',
+        preciseCoords: 'Click anywhere on the map to display its precise coordinates.', settings: 'Settings',
+        darkTheme: 'Dark theme', centerCrosshair: 'Center crosshair',
+        fullscreen: 'Toggle Fullscreen', searchFailed: 'Search failed.', searching: 'Searching...', copied: 'Copied!',
+        mainLayers: 'Main Layers', extraLayers: 'Extra Layers',
+        russianTerritory: 'Russian-controlled territory',
+        area: 'Area',
+        basemapEsriHybrid: 'Esri Hybrid (Satellite + Labels)', basemapEsriSatellite: 'Esri Satellite',
+        twitter: 'Twitter/X'
+      },
+      ru: {
+        search: 'Поиск', searchPlaceholder: 'Поиск посёлка, города или координат...',
+        basemapsLayers: 'Подложки и слои', baseMap: 'Карта',
+        drawTools: 'Инструменты рисования', solidTools: 'Сплошные инструменты', dashedTools: 'Пунктирные инструменты', shapesUtilities: 'Фигуры и инструменты',
+        freehand: 'Свободная линия', freehandArrow: 'Свободная стрелка', line: 'Линия', arrow: 'Стрелка',
+        dashedFreehand: 'Свободная пунктирная линия', dashedFreehandArrow: 'Свободная пунктирная стрелка', dashedLine: 'Пунктирная линия', dashedArrow: 'Пунктирная стрелка',
+        polygon: 'Полигон', rectangle: 'Прямоугольник', ukraineFlag: '🇺🇦 Флаг Украины', russiaFlag: '🇷🇺 Флаг России', eraser: 'Ластик',
+        thickness: 'Толщина', red: 'Красный', blue: 'Синий', green: 'Зелёный', yellow: 'Жёлтый', black: 'Чёрный', white: 'Белый',
+        finishShape: 'Завершить фигуру', clearDrawings: 'Очистить мои рисунки', selectShape: 'Выберите фигуру для рисования.',
+        ruler: 'Линейка (измерение)', kilometers: 'Километры (км)', miles: 'Мили (mi)', finishMeasuring: 'Завершить измерение', clearLine: 'Очистить линию',
+        measurePrompt: 'Нажимайте точки на карте, чтобы измерить расстояние.', coordinates: 'Координаты',
+        preciseCoords: 'Нажмите в любом месте карты, чтобы увидеть точные координаты.', settings: 'Настройки',
+        darkTheme: 'Тёмная тема', centerCrosshair: 'Центральный прицел',
+        fullscreen: 'Полноэкранный режим', searchFailed: 'Ошибка поиска.', searching: 'Поиск...', copied: 'Скопировано!',
+        mainLayers: 'Основные слои', extraLayers: 'Дополнительные слои',
+        russianTerritory: 'Территория под контролем России',
+        area: 'Площадь',
+        basemapEsriHybrid: 'Esri Hybrid (спутник + подписи)', basemapEsriSatellite: 'Esri Satellite',
+        twitter: 'Twitter/X'
+      }
+    };
+
+    function pt(key) { return (PUBLIC_TRANSLATIONS[publicLanguage] || PUBLIC_TRANSLATIONS.en)[key] || key; }
+    function publicLayerLabel(name) {
+      var m = {
+        'Russian-controlled territory':'russianTerritory',
+        'My Drawings':'myDrawings'
+      };
+      var key = m[name];
+      if (key && PUBLIC_TRANSLATIONS[publicLanguage][key]) return PUBLIC_TRANSLATIONS[publicLanguage][key];
+      return name;
+    }
+    function applyPublicLanguage() {
+      document.documentElement.lang = publicLanguage;
+      var en = document.getElementById('lang-en'), ru = document.getElementById('lang-ru');
+      if (en) en.classList.toggle('active', publicLanguage === 'en');
+      if (ru) ru.classList.toggle('active', publicLanguage === 'ru');
+      var staticMap = {
+        'panel-layers h4':'basemapsLayers','basemap-selector-container strong':'baseMap',
+        'panel-draw h4':'drawTools','panel-ruler h4':'ruler','panel-coords h4':'coordinates','panel-settings h4':'settings',
+        'btn-tab-layers':'basemapsLayers','btn-tab-draw':'drawTools','btn-tab-ruler':'ruler','btn-tab-coords':'coordinates','btn-tab-settings':'settings',
+        'btn-fullscreen':'fullscreen','search-toggle-btn':'search',
+        'toggle-dark-theme-label':'darkTheme','toggle-crosshair-label':'centerCrosshair','twitter-link':'twitter',
+        'unit-km':'kilometers','unit-mi':'miles'
+      };
+      Object.keys(staticMap).forEach(function(sel){
+        var el = sel.indexOf(' ') !== -1 ? document.querySelector(sel) : document.getElementById(sel);
+        if (!el) return;
+        if (/^(btn-tab-|btn-fullscreen|search-toggle-btn)$/.test(sel)) {
+          el.title = pt(staticMap[sel]);
+          el.setAttribute('aria-label', el.title);
+        } else {
+          el.textContent = pt(staticMap[sel]);
+        }
+      });
+      var input = document.getElementById('header-search-input'); if (input) input.placeholder = pt('searchPlaceholder');
+      var drawButtons = {
+        'btn-freehand':'freehand','btn-freehand-arrow':'freehandArrow','btn-line':'line','btn-arrow':'arrow','btn-dashed-freehand':'dashedFreehand','btn-dashed-freehand-arrow':'dashedFreehandArrow','btn-dashed-line':'dashedLine','btn-dashed-arrow':'dashedArrow','btn-polygon':'polygon','btn-rectangle':'rectangle','btn-flag-ua':'ukraineFlag','btn-flag-ru':'russiaFlag','btn-eraser':'eraser'
+      };
+      Object.keys(drawButtons).forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=pt(drawButtons[id]); });
+      var finishBtns=document.querySelectorAll('#panel-draw .tool-btn'); if(finishBtns[finishBtns.length-2]) finishBtns[finishBtns.length-2].textContent=pt('finishShape'); if(finishBtns[finishBtns.length-1]) finishBtns[finishBtns.length-1].textContent=pt('clearDrawings');
+      var rBtns=document.querySelectorAll('#panel-ruler .tool-btn'); if(rBtns[0]) rBtns[0].textContent=pt('finishMeasuring'); if(rBtns[1]) rBtns[1].textContent=pt('clearLine');
+      var thickness=document.querySelector('#panel-draw .thickness-row label'); if(thickness) thickness.childNodes[0].textContent=pt('thickness') + ': ';
+      var colors={red:'color-red',blue:'color-blue',green:'color-green',yellow:'color-yellow',black:'color-black',white:'color-white'}; Object.keys(colors).forEach(function(k){var e=document.getElementById(colors[k]); if(e)e.textContent=pt(k);});
+      updateSidebarLayerControl(); updateInstructions();
+    }
+    window.setPublicLanguage = function(lang) {
+      publicLanguage = lang === 'ru' ? 'ru' : 'en';
+      localStorage.setItem('polrad_language', publicLanguage);
+      window.location.reload();
+    };
+    document.addEventListener('DOMContentLoaded', function(){
+      var en=document.getElementById('lang-en'), ru=document.getElementById('lang-ru');
+      if(en) en.onclick=function(){setPublicLanguage('en');}; if(ru) ru.onclick=function(){setPublicLanguage('ru');};
+    });
+
+    window.addEventListener('load', function(){ setTimeout(applyPublicLanguage, 100); });
+
+    function toggleFullScreen() {
+      var btn = document.getElementById('btn-fullscreen');
+
+      if (!document.fullscreenElement &&
+          !document.webkitFullscreenElement &&
+          !document.msFullscreenElement) {
+
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+          document.documentElement.msRequestFullscreen();
+        }
+
+        if (btn) btn.classList.add('active');
+
+      } else {
+
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+
+        if (btn) btn.classList.remove('active');
+      }
+    }
+
+    var satellite = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 19
+      }
+    );
+
+    var esriHybrid = L.layerGroup([
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Tiles &copy; Esri',
+          crossOrigin: true,
+          maxZoom: 19
+        }
+      ),
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Labels &copy; Esri',
+          maxZoom: 19
+        }
+      )
+    ]);
+
+    var baseLayers = {
+      "Esri Hybrid (Satellite + Labels)": esriHybrid,
+      "Esri Satellite": satellite
+    };
+
+    var currentBaseLayer = esriHybrid;
+
+    var map = L.map('map', {
+      center: [48.00, 37.75],
+      zoom: 7,
+      scrollWheelZoom: true,
+      zoomControl: false,
+      preferCanvas: true,
+      layers: [currentBaseLayer]
+    });
+
+    L.control.zoom({
+      position: 'bottomright'
+    }).addTo(map);
+
+    var scaleControl = L.control.scale({
+      position: 'bottomleft',
+      metric: true,
+      imperial: true,
+      maxWidth: 150
+    }).addTo(map);
+
+    var currentUnit = 'km';
+
+    function setMeasurementUnit(unit) {
+      currentUnit = unit;
+
+      document.getElementById('unit-km').classList.toggle('selected', unit === 'km');
+      document.getElementById('unit-mi').classList.toggle('selected', unit === 'mi');
+
+      map.removeControl(scaleControl);
+
+      scaleControl = L.control.scale({
+        position: 'bottomleft',
+        metric: (unit === 'km'),
+        imperial: (unit === 'mi'),
+        maxWidth: 150
+      }).addTo(map);
+
+      if (drawingPoints.length > 1 && activeTool === 'ruler') {
+        var totalMeters = 0;
+
+        for (var i = 1; i < drawingPoints.length; i++) {
+          totalMeters += map.distance(
+            drawingPoints[i - 1],
+            drawingPoints[i]
+          );
+        }
+
+        updateRulerDisplay(totalMeters);
+      }
+    }
+
+    function updateRulerDisplay(meters) {
+      if (currentUnit === 'mi') {
+        var miles = (meters / 1609.344).toFixed(2);
+        document.getElementById('ruler-result').innerText =
+          "Distance: " + miles + " mi";
+      } else {
+        var km = (meters / 1000).toFixed(2);
+        document.getElementById('ruler-result').innerText =
+          "Distance: " + km + " km";
+      }
+    }
+
+    function toggleCrosshairSetting(checked) {
+      document.getElementById('map-crosshair').style.display =
+        checked ? 'block' : 'none';
+    }
+
+    function setDarkTheme(enabled) {
+      document.body.classList.toggle('light-mode', !enabled);
+    }
+
+    map.createPane('territoryPane');
+    map.getPane('territoryPane').style.zIndex = 420;
+
+    map.createPane('drawingsPane');
+    map.getPane('drawingsPane').style.zIndex = 650;
+
+    map.createPane('markersPane');
+    map.getPane('markersPane').style.zIndex = 700;
+    ['polyline', 'polygon', 'rectangle'].forEach(function(name) {
+      var original = L[name];
+      L[name] = function(shape, options) {
+        var opts = Object.assign({ pane: 'drawingsPane' }, options || {});
+        return original(shape, opts);
+      };
+    });
+
+    var appHeaderEl = document.getElementById('app-header');
+
+    L.DomEvent.disableClickPropagation(appHeaderEl);
+    L.DomEvent.disableScrollPropagation(appHeaderEl);
+
+    var searchProvider = new GeoSearch.OpenStreetMapProvider({
+      params: {
+        'accept-language': 'en',
+        countrycodes: 'ua,ru',
+        viewbox: '22.13,44.38,40.25,53.50',
+        bounded: 1
+      }
+    });
+
+    var searchResultMarker = null;
+
+    function clearSearchMarker() {
+      if (searchResultMarker) {
+        var m = searchResultMarker;
+        searchResultMarker = null;
+        m.off('popupclose');
+        map.removeLayer(m);
+      }
+    }
+
+    function showSearchLocation(lat, lng, label) {
+      map.setView(
+        [lat, lng],
+        Math.max(map.getZoom(), 10)
+      );
+
+      clearSearchMarker();
+
+      var content = document.createElement('div');
+
+      var text = document.createElement('div');
+      text.textContent = label;
+      content.appendChild(text);
+
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'coords-copy-btn';
+      removeBtn.textContent = 'Remove';
+      removeBtn.onclick = clearSearchMarker;
+      content.appendChild(removeBtn);
+
+      searchResultMarker = L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(content, { closeOnClick: false, autoClose: false })
+        .openPopup();
+      searchResultMarker.on('popupclose', clearSearchMarker);
+    }
+
+    function runHeaderSearch() {
+      var input = document.getElementById('header-search-input');
+      var results = document.getElementById('header-search-results');
+      var query = input.value.trim();
+
+      if (!query) return;
+
+      var coord = query.match(
+        /^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/
+      );
+
+      if (coord) {
+        var lat = Number(coord[1]);
+        var lng = Number(coord[2]);
+
+        if (
+          lat >= -90 &&
+          lat <= 90 &&
+          lng >= -180 &&
+          lng <= 180
+        ) {
+          showSearchLocation(lat, lng, query);
+          results.classList.remove('show');
+          return;
+        }
+      }
+
+      results.innerHTML =
+        '<div class="header-search-result">' + pt('searching') + '</div>';
+
+      results.classList.add('show');
+
+      searchProvider.search({
+        query: query
+      }).then(function(found) {
+
+        results.innerHTML = '';
+
+        if (!found || !found.length) {
+          results.innerHTML =
+            '<div class="header-search-result">No results found.</div>';
+          return;
+        }
+
+        found.slice(0, 5).forEach(function(r) {
+
+          var item = document.createElement('div');
+
+          item.className = 'header-search-result';
+
+          item.textContent = r.label || query;
+
+          item.onclick = function() {
+            showSearchLocation(
+              r.y,
+              r.x,
+              r.label || query
+            );
+
+            results.classList.remove('show');
+          };
+
+          results.appendChild(item);
+        });
+
+      }).catch(function() {
+
+        results.innerHTML =
+          '<div class="header-search-result">' + pt('searchFailed') + '</div>';
+
+      });
+    }
+
+    function toggleHeaderSearch() {
+      var box = document.getElementById('app-header-search');
+
+      box.classList.toggle('show');
+
+      if (box.classList.contains('show')) {
+        document.getElementById('header-search-input').focus();
+      }
+    }
+
+    document.getElementById('header-search-go')
+      .addEventListener('click', runHeaderSearch);
+
+    document.getElementById('header-search-input')
+      .addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          runHeaderSearch();
+        }
+      });
+
+    function toggleTab(tabName) {
+
+      var panel = document.getElementById('panel-' + tabName);
+      var btn = document.getElementById('btn-tab-' + tabName);
+
+      var isCurrentlyShow =
+        panel ? panel.classList.contains('show') : false;
+
+      document.querySelectorAll('.sidebar-panel')
+        .forEach(p => p.classList.remove('show'));
+
+      document.querySelectorAll('.sidebar-btn')
+        .forEach(b => {
+          if (b.id !== 'btn-fullscreen') {
+            b.classList.remove('active');
+          }
+        });
+
+      if (panel && !isCurrentlyShow) {
+
+        panel.classList.add('show');
+
+        if (btn) {
+          btn.classList.add('active');
+        }
+
+        if (tabName === 'ruler') {
+          setActiveTool('ruler');
+        } else if (tabName === 'coords') {
+          setActiveTool('coords');
+        } else if (
+          tabName !== 'draw' &&
+          (activeTool === 'ruler' || activeTool === 'coords')
+        ) {
+          setActiveTool(null);
+        }
+
+      } else {
+        setActiveTool(null);
+      }
+    }
+
+    var basemapContainer =
+      document.getElementById('basemap-options');
+
+    Object.keys(baseLayers).forEach(function(key) {
+
+      var label = document.createElement('label');
+
+      label.style.display = 'block';
+      label.style.marginBottom = '4px';
+      label.style.cursor = 'pointer';
+
+      var radio = document.createElement('input');
+
+      radio.type = 'radio';
+      radio.name = 'basemap';
+      radio.dataset.basemapKey = key;
+      radio.checked =
+        baseLayers[key] === currentBaseLayer;
+
+      radio.addEventListener('change', function() {
+
+        if (radio.checked) {
+
+          map.removeLayer(currentBaseLayer);
+
+          currentBaseLayer = baseLayers[key];
+
+          map.addLayer(currentBaseLayer);
+        }
+      });
+
+      label.appendChild(radio);
+      label.appendChild(
+        document.createTextNode(' ' + (key === 'Esri Hybrid (Satellite + Labels)' ? pt('basemapEsriHybrid') : pt('basemapEsriSatellite')))
+      );
+
+      basemapContainer.appendChild(label);
+    });
+
+    var mainLayers = {};
+    var extraLayers = {};
+
+    function fetchGeoJSONWithFallbacks(file) {
+      var bust = (file.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now();
+      var url = file + bust;
+      return fetch(url, { cache: 'no-store' })
+        .then(function(response) {
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return response.json();
+        });
+    }
+
+    var layerFiles = [
+      {
+        file: "russia.geojson",
+        name: "Russian-controlled territory",
+        color: "#a52714",
+        group: "main",
+        noOutline: true,
+        smoothFactor: 2.0
+      }
+    ];
+
+    function getFeaturesFromLayer(layer) {
+      if (!layer || !layer.toGeoJSON) return [];
+
+      var geojson = layer.toGeoJSON();
+
+      if (!geojson) return [];
+
+      if (geojson.type === 'FeatureCollection') {
+        return geojson.features || [];
+      }
+
+      if (geojson.type === 'Feature') {
+        return [geojson];
+      }
+
+      return [];
+    }
+
+    layerFiles.forEach(function(layerInfo) {
+
+      fetchGeoJSONWithFallbacks(layerInfo.file)
+        .then(function(data) {
+
+          var layer = L.geoJSON(data, {
+
+            pane: 'territoryPane',
+            smoothFactor: layerInfo.smoothFactor !== undefined
+              ? layerInfo.smoothFactor
+              : 1.0,
+
+            pointToLayer: function(feature, latlng) {
+              return L.marker(latlng);
+            },
+
+            style: function(feature) {
+              var style = {
+                color: layerInfo.outlineColor || layerInfo.color,
+                weight: 2,
+                fillColor: layerInfo.color,
+                fillOpacity: layerInfo.fillOpacity !== undefined
+                  ? layerInfo.fillOpacity
+                  : 0.4
+              };
+
+              if (layerInfo.noOutline) {
+                style.stroke = false;
+              }
+
+              return style;
+            },
+
+            onEachFeature: function(feature, featureLayer) {
+              if (
+                feature.geometry &&
+                (
+                  feature.geometry.type === "Polygon" ||
+                  feature.geometry.type === "MultiPolygon"
+                )
+              ) {
+                featureLayer.on('click', function(e) {
+                  if (activeTool) return;
+                  var geojson = featureLayer.toGeoJSON();
+                  var areaInMeters = turf.area(geojson);
+                  var areaInKm2 = (areaInMeters / 1000000).toFixed(2);
+                  var areaInMi2 = (areaInMeters / 2589988.11).toFixed(2);
+
+                  L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(
+                      "<b>" + layerInfo.name + "</b><br>" +
+                      "<b>" + pt('area') + ":</b> " +
+                      areaInKm2 + " km² (" + areaInMi2 + " sq mi)"
+                    )
+                    .openOn(map);
+
+                  if (!activeTool) {
+                    L.DomEvent.stopPropagation(e);
+                  }
+                });
+              }
+            }
+          });
+
+          mainLayers[layerInfo.name] = layer;
+          layer.addTo(map);
+
+          updateSidebarLayerControl();
+
+        })
+        .catch(err =>
+          console.error(
+            "Layer load error:",
+            err
+          )
+        );
+    });
+
+    function updateSidebarLayerControl() {
+
+      var container =
+        document.getElementById(
+          'grouped-layer-container'
+        );
+
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      function addGroup(sectionTitle, layers) {
+
+        var section =
+          document.createElement('div');
+
+        section.style.marginBottom =
+          '10px';
+
+        var title =
+          document.createElement('div');
+
+        title.style.fontWeight =
+          'bold';
+
+        title.style.fontSize =
+          '13px';
+
+        title.style.marginBottom =
+          '4px';
+
+        title.textContent =
+          sectionTitle;
+
+        section.appendChild(title);
+
+        Object.keys(layers)
+          .forEach(function(name) {
+
+            var checkbox =
+              document.createElement('input');
+
+            checkbox.type = 'checkbox';
+
+            checkbox.checked =
+              map.hasLayer(layers[name]);
+
+            checkbox.addEventListener(
+              'change',
+              function() {
+                if (checkbox.checked) {
+                  if (!map.hasLayer(layers[name])) map.addLayer(layers[name]);
+                } else {
+                  if (map.hasLayer(layers[name])) map.removeLayer(layers[name]);
+                }
+              }
+            );
+
+            var label =
+              document.createElement('label');
+
+            label.style.display =
+              'block';
+
+            label.style.fontSize =
+              '13px';
+
+            label.style.marginBottom =
+              '3px';
+
+            label.appendChild(checkbox);
+
+            label.appendChild(
+              document.createTextNode(
+                ' ' + publicLayerLabel(name)
+              )
+            );
+
+            section.appendChild(label);
+          });
+
+        return section;
+      }
+
+      container.appendChild(
+        addGroup(
+          pt('mainLayers'),
+          mainLayers
+        )
+      );
+
+      if (Object.keys(extraLayers).length) {
+        container.appendChild(
+          addGroup(
+            pt('extraLayers'),
+            extraLayers
+          )
+        );
+      }
+    }
+
+    var activeTool = null;
+    var currentColor = '#ff0000';
+    var currentThickness = 3;
+    var drawingPoints = [];
+    var previewLayer = null;
+    var isMouseDown = false;
+
+    var userDrawings =
+      L.layerGroup().addTo(map);
+
+    extraLayers["My Drawings"] =
+      userDrawings;
+
+    function attachEraser(layer) {
+      layer.on('click', function(e) {
+        if (activeTool === 'eraser') {
+          userDrawings.removeLayer(layer);
+          L.DomEvent.stopPropagation(e);
+        }
+      });
+    }
+
+    function setThickness(val) {
+      currentThickness = parseInt(val, 10);
+      document.getElementById('thickness-val').innerText = val + 'px';
+    }
+
+    function setColor(color) {
+      currentColor = color;
+
+      var colorMap = {
+        '#ff0000': 'color-red',
+        '#0000ff': 'color-blue',
+        '#2ecc71': 'color-green',
+        '#f1c40f': 'color-yellow',
+        '#171717': 'color-black',
+        '#ffffff': 'color-white'
+      };
+
+      Object.keys(colorMap).forEach(function(key) {
+        var el = document.getElementById(colorMap[key]);
+        if (el) {
+          el.classList.toggle('selected', key === color);
+        }
+      });
+    }
+
+    function setActiveTool(tool) {
+      activeTool = (activeTool === tool) ? null : tool;
+      if (activeTool !== 'coords') clearCoordMarker();
+      resetDrawingState();
+      updateToolButtons();
+      updateInstructions();
+      document.body.classList.toggle('no-select-mode', !!activeTool);
+    }
+
+    function resetDrawingState() {
+      drawingPoints = [];
+
+      if (previewLayer) {
+        map.removeLayer(previewLayer);
+        previewLayer = null;
+      }
+
+      isMouseDown = false;
+      map.dragging.enable();
+    }
+
+    function updateToolButtons() {
+      document
+        .querySelectorAll('#panel-draw .tool-btn')
+        .forEach(btn => btn.classList.remove('active'));
+
+      if (activeTool) {
+        var btn = document.getElementById('btn-' + activeTool);
+        if (btn) {
+          btn.classList.add('active');
+        }
+      }
+    }
+
+    function updateInstructions() {
+      var drawMsg = document.getElementById('draw-result');
+      var rulerMsg = document.getElementById('ruler-result');
+      var coordsMsg = document.getElementById('coords-result');
+      var msgs = {
+        polygon: publicLanguage === 'ru' ? "Нажимайте точки, чтобы обвести фигуру, затем нажмите «Завершить фигуру»." : "Click points to trace a shape, then click 'Finish Shape'.",
+        freehand: publicLanguage === 'ru' ? "Зажмите кнопку мыши и рисуйте свободно." : "Click and drag on the map to draw freely.",
+        'freehand-arrow': publicLanguage === 'ru' ? "Зажмите кнопку мыши и нарисуйте линию. После отпускания на конце появится стрелка." : "Click and drag to draw a line. An arrowhead will be added at the tip when you release.",
+        'dashed-freehand': publicLanguage === 'ru' ? "Зажмите кнопку мыши и рисуйте пунктирную линию." : "Click and drag on the map to draw a dashed line freely.",
+        'dashed-freehand-arrow': publicLanguage === 'ru' ? "Зажмите кнопку мыши и нарисуйте пунктирную линию. После отпускания появится стрелка." : "Click and drag to draw a dashed line. An arrowhead will be added at the tip when you release.",
+        line: publicLanguage === 'ru' ? "Нажимайте точки, чтобы нарисовать линию, затем нажмите «Завершить фигуру»." : "Click points to draw a line, then click 'Finish Shape'.",
+        'dashed-line': publicLanguage === 'ru' ? "Нажимайте точки, чтобы нарисовать пунктирную линию, затем нажмите «Завершить фигуру»." : "Click points to draw a dashed line, then click 'Finish Shape'.",
+        arrow: publicLanguage === 'ru' ? "Нажмите начальную точку, затем конечную, чтобы поставить стрелку." : "Click start point, then click end point to place an arrow.",
+        'dashed-arrow': publicLanguage === 'ru' ? "Нажмите начальную точку, затем конечную, чтобы поставить пунктирную стрелку." : "Click start point, then click end point to place a dashed arrow.",
+        rectangle: publicLanguage === 'ru' ? "Нажмите один угол, затем противоположный угол." : "Click one corner, then click opposite corner.",
+        'flag-ua': publicLanguage === 'ru' ? "Нажмите на карте, чтобы поставить флаг Украины." : "Click anywhere on the map to drop a Ukraine flag marker.",
+        'flag-ru': publicLanguage === 'ru' ? "Нажмите на карте, чтобы поставить флаг России." : "Click anywhere on the map to drop a Russia flag marker.",
+        eraser: publicLanguage === 'ru' ? "Нажмите на нарисованную фигуру или линию, чтобы удалить её." : "Click on any drawn shape or line to erase it.",
+        ruler: pt('measurePrompt'), coords: pt('preciseCoords')
+      };
+      if (activeTool === 'ruler') rulerMsg.innerText = msgs.ruler;
+      else if (activeTool === 'coords') coordsMsg.innerText = msgs.coords;
+      else drawMsg.innerText = activeTool ? msgs[activeTool] : pt('selectShape');
+    }
+
+    map.on('mousedown', function(e) {
+      if (
+        activeTool !== 'freehand' &&
+        activeTool !== 'dashed-freehand' &&
+        activeTool !== 'freehand-arrow' &&
+        activeTool !== 'dashed-freehand-arrow'
+      ) {
+        return;
+      }
+
+      if (e.originalEvent) {
+        e.originalEvent.preventDefault();
+      }
+
+      isMouseDown = true;
+      map.dragging.disable();
+      drawingPoints = [e.latlng];
+
+      if (previewLayer) {
+        map.removeLayer(previewLayer);
+      }
+
+      var options = {
+        color: currentColor,
+        weight: currentThickness
+      };
+
+      if (
+        activeTool === 'dashed-freehand' ||
+        activeTool === 'dashed-freehand-arrow'
+      ) {
+        options.dashArray = '6, 6';
+      }
+
+      previewLayer = L.polyline(drawingPoints, options).addTo(map);
+    });
+
+    map.on('mousemove', function(e) {
+      if (
+        (
+          activeTool === 'freehand' ||
+          activeTool === 'dashed-freehand' ||
+          activeTool === 'freehand-arrow' ||
+          activeTool === 'dashed-freehand-arrow'
+        ) &&
+        isMouseDown
+      ) {
+        drawingPoints.push(e.latlng);
+        previewLayer.setLatLngs(drawingPoints);
+        return;
+      }
+
+      if (
+        activeTool === 'rectangle' &&
+        drawingPoints.length === 1
+      ) {
+        var bounds = L.latLngBounds(drawingPoints[0], e.latlng);
+
+        if (previewLayer) {
+          map.removeLayer(previewLayer);
+        }
+
+        previewLayer = L.rectangle(bounds, {
+          color: currentColor,
+          weight: currentThickness,
+          fillColor: currentColor,
+          fillOpacity: 0.3
+        }).addTo(map);
+
+        return;
+      }
+
+      if (
+        (
+          activeTool === 'arrow' ||
+          activeTool === 'dashed-arrow'
+        ) &&
+        drawingPoints.length === 1
+      ) {
+        if (previewLayer) {
+          map.removeLayer(previewLayer);
+        }
+
+        var options = {
+          color: currentColor,
+          weight: currentThickness
+        };
+
+        if (activeTool === 'dashed-arrow') {
+          options.dashArray = '6, 6';
+        }
+
+        previewLayer = L.polyline(
+          [drawingPoints[0], e.latlng],
+          options
+        ).addTo(map);
+      }
+    });
+
+    map.on('mouseup', function() {
+      if (
+        (
+          activeTool !== 'freehand' &&
+          activeTool !== 'dashed-freehand' &&
+          activeTool !== 'freehand-arrow' &&
+          activeTool !== 'dashed-freehand-arrow'
+        ) ||
+        !isMouseDown
+      ) {
+        return;
+      }
+
+      isMouseDown = false;
+      map.dragging.enable();
+
+      if (drawingPoints.length >= 2) {
+        if (
+          activeTool === 'freehand-arrow' ||
+          activeTool === 'dashed-freehand-arrow'
+        ) {
+          var isDashed = activeTool === 'dashed-freehand-arrow';
+
+          addFreehandArrow(
+            drawingPoints,
+            currentColor,
+            currentThickness,
+            isDashed
+          );
+        } else {
+          var options = {
+            color: currentColor,
+            weight: currentThickness
+          };
+
+          if (activeTool === 'dashed-freehand') {
+            options.dashArray = '6, 6';
+          }
+
+          var line = L.polyline(drawingPoints, options);
+
+          attachEraser(line);
+          userDrawings.addLayer(line);
+        }
+      }
+
+      if (previewLayer) {
+        map.removeLayer(previewLayer);
+        previewLayer = null;
+      }
+
+      drawingPoints = [];
+    });
+
+    var coordMarker = null;
+
+    function clearCoordMarker() {
+      if (coordMarker) {
+        map.removeLayer(coordMarker);
+        coordMarker = null;
+      }
+    }
+
+    function selectCoordinate(latlng) {
+      var latText = latlng.lat.toFixed(5);
+      var lngText = latlng.lng.toFixed(5);
+
+      var copyButton =
+        "<button class=\"coords-copy-btn\" type=\"button\" " +
+        "onclick=\"copyCoordinates(" + latText + ", " + lngText + ", this)\">" +
+        (publicLanguage === 'ru' ? 'Копировать координаты' : 'Copy coordinates') + "</button>";
+
+      clearCoordMarker();
+
+      coordMarker = L.circleMarker(latlng, {
+        radius: 7,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#ff0000',
+        fillOpacity: 1,
+        pane: 'markersPane'
+      }).addTo(map);
+
+      coordMarker
+        .bindPopup("Lat: " + latText + "<br>Lng: " + lngText + "<br>" + copyButton)
+        .openPopup();
+
+      document.getElementById('coords-result').innerHTML =
+        "Lat: " + latText + ", Lng: " + lngText + "<br>" + copyButton;
+    }
+
+    window.copyCoordinates = function(lat, lng, btn) {
+      var text = lat + ', ' + lng;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          if (btn) {
+            var orig = btn.textContent;
+            btn.textContent = publicLanguage === 'ru' ? 'Скопировано!' : 'Copied!';
+            setTimeout(function(){ btn.textContent = orig; }, 1200);
+          }
+        });
+      }
+    };
+
+    map.getContainer().addEventListener('click', function(ev) {
+      if (activeTool !== 'coords') return;
+      if (ev.target.closest('.leaflet-popup, .leaflet-control')) return;
+
+      var rect = map.getContainer().getBoundingClientRect();
+      var latlng = map.containerPointToLatLng(
+        L.point(ev.clientX - rect.left, ev.clientY - rect.top)
+      );
+      map._coordinateClickHandled = true;
+
+      selectCoordinate(latlng);
+    }, true);
+
+    map.on('click', function(e) {
+      if (activeTool === 'coords') {
+        if (map._coordinateClickHandled) {
+          map._coordinateClickHandled = false;
+          return;
+        }
+      }
+
+      if (!activeTool) return;
+
+      if (activeTool === 'coords') {
+        selectCoordinate(e.latlng);
+        return;
+      }
+
+      if (
+        activeTool === 'polygon' ||
+        activeTool === 'line' ||
+        activeTool === 'dashed-line' ||
+        activeTool === 'ruler'
+      ) {
+        drawingPoints.push(e.latlng);
+
+        if (previewLayer) {
+          map.removeLayer(previewLayer);
+        }
+
+        var options = {
+          color: activeTool === 'ruler' ? '#000000' : currentColor,
+          weight: currentThickness
+        };
+
+        if (
+          activeTool === 'ruler' ||
+          activeTool === 'dashed-line'
+        ) {
+          options.dashArray = '6,6';
+        }
+
+        previewLayer = L.polyline(drawingPoints, options).addTo(map);
+
+        if (
+          activeTool === 'ruler' &&
+          drawingPoints.length > 1
+        ) {
+          var total = 0;
+
+          for (var i = 1; i < drawingPoints.length; i++) {
+            total += map.distance(
+              drawingPoints[i - 1],
+              drawingPoints[i]
+            );
+          }
+
+          updateRulerDisplay(total);
+        }
+
+        return;
+      }
+
+      if (activeTool === 'rectangle') {
+        if (drawingPoints.length === 0) {
+          drawingPoints.push(e.latlng);
+        } else {
+          var bounds = L.latLngBounds(drawingPoints[0], e.latlng);
+
+          var rect = L.rectangle(bounds, {
+            color: currentColor,
+            weight: currentThickness,
+            fillColor: currentColor,
+            fillOpacity: 0.4
+          });
+
+          attachEraser(rect);
+          userDrawings.addLayer(rect);
+
+          if (previewLayer) {
+            map.removeLayer(previewLayer);
+            previewLayer = null;
+          }
+
+          drawingPoints = [];
+        }
+
+        return;
+      }
+
+      if (
+        activeTool === 'flag-ua' ||
+        activeTool === 'flag-ru'
+      ) {
+        var flagIcon = activeTool === 'flag-ua'
+          ? ukraineFlagIcon
+          : russiaFlagIcon;
+
+        var flagLabel = activeTool === 'flag-ua'
+          ? 'Ukraine flag'
+          : 'Russia flag';
+
+        var flagMarker = L.marker(e.latlng, { icon: flagIcon })
+          .bindPopup(flagLabel);
+
+        attachEraser(flagMarker);
+        userDrawings.addLayer(flagMarker);
+
+        return;
+      }
+
+      if (
+        activeTool === 'arrow' ||
+        activeTool === 'dashed-arrow'
+      ) {
+        if (drawingPoints.length === 0) {
+          drawingPoints.push(e.latlng);
+        } else {
+          var isDashed = activeTool === 'dashed-arrow';
+
+          addArrow(
+            drawingPoints[0],
+            e.latlng,
+            currentColor,
+            currentThickness,
+            isDashed
+          );
+
+          if (previewLayer) {
+            map.removeLayer(previewLayer);
+            previewLayer = null;
+          }
+
+          drawingPoints = [];
+        }
+      }
+    });
+
+    var ukraineFlagIcon = L.icon({
+      iconUrl:
+        'https://pics.clipartpng.com/midle/Ukraine_Flag_PNG_Clip_Art-1811.png',
+      iconSize: [32, 21],
+      iconAnchor: [16, 21],
+      popupAnchor: [0, -21]
+    });
+
+    var russiaFlagIcon = L.icon({
+      iconUrl:
+        'https://pics.clipartpng.com/midle/Russia_Flag_PNG_Clip_Art-1857.png',
+      iconSize: [32, 21],
+      iconAnchor: [16, 21],
+      popupAnchor: [0, -21]
+    });
+
+    function addArrow(start, end, color, weight, isDashed) {
+      var arrowGroup = L.layerGroup();
+
+      var options = {
+        color: color,
+        weight: weight
+      };
+
+      if (isDashed) {
+        options.dashArray = '6, 6';
+      }
+
+      var line = L.polyline([start, end], options);
+      arrowGroup.addLayer(line);
+
+      var p1 = map.latLngToLayerPoint(start);
+      var p2 = map.latLngToLayerPoint(end);
+
+      var angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      var headLength = Math.max(12, weight * 3);
+      var headAngle = Math.PI / 7;
+
+      var leftPt = L.point(
+        p2.x - headLength * Math.cos(angle - headAngle),
+        p2.y - headLength * Math.sin(angle - headAngle)
+      );
+
+      var rightPt = L.point(
+        p2.x - headLength * Math.cos(angle + headAngle),
+        p2.y - headLength * Math.sin(angle + headAngle)
+      );
+
+      var head = L.polygon(
+        [
+          map.layerPointToLatLng(p2),
+          map.layerPointToLatLng(leftPt),
+          map.layerPointToLatLng(rightPt)
+        ],
+        {
+          color: color,
+          fillColor: color,
+          fillOpacity: 1
+        }
+      );
+
+      arrowGroup.addLayer(head);
+
+      attachEraser(line);
+      attachEraser(head);
+
+      userDrawings.addLayer(arrowGroup);
+    }
+
+    function addFreehandArrow(pts, color, weight, isDashed) {
+      var arrowGroup = L.layerGroup();
+
+      var options = {
+        color: color,
+        weight: weight
+      };
+
+      if (isDashed) {
+        options.dashArray = '6, 6';
+      }
+
+      var line = L.polyline(pts, options);
+      arrowGroup.addLayer(line);
+
+      var endPt = pts[pts.length - 1];
+      var prevPt = pts[Math.max(0, pts.length - 5)];
+
+      var p1 = map.latLngToLayerPoint(prevPt);
+      var p2 = map.latLngToLayerPoint(endPt);
+
+      var angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      var headLength = Math.max(12, weight * 3);
+      var headAngle = Math.PI / 7;
+
+      var leftPt = L.point(
+        p2.x - headLength * Math.cos(angle - headAngle),
+        p2.y - headLength * Math.sin(angle - headAngle)
+      );
+
+      var rightPt = L.point(
+        p2.x - headLength * Math.cos(angle + headAngle),
+        p2.y - headLength * Math.sin(angle + headAngle)
+      );
+
+      var head = L.polygon(
+        [
+          map.layerPointToLatLng(p2),
+          map.layerPointToLatLng(leftPt),
+          map.layerPointToLatLng(rightPt)
+        ],
+        {
+          color: color,
+          fillColor: color,
+          fillOpacity: 1
+        }
+      );
+
+      arrowGroup.addLayer(head);
+
+      attachEraser(line);
+      attachEraser(head);
+
+      userDrawings.addLayer(arrowGroup);
+    }
+
+    function finishShape() {
+      if (
+        activeTool === 'polygon' &&
+        drawingPoints.length >= 3
+      ) {
+        var poly = L.polygon(drawingPoints, {
+          color: currentColor,
+          weight: currentThickness,
+          fillColor: currentColor,
+          fillOpacity: 0.4
+        });
+
+        attachEraser(poly);
+        userDrawings.addLayer(poly);
+
+      } else if (
+        (activeTool === 'dashed-line' || activeTool === 'line') &&
+        drawingPoints.length >= 2
+      ) {
+        var lineOptions = {
+          color: currentColor,
+          weight: currentThickness
+        };
+
+        if (activeTool === 'dashed-line') {
+          lineOptions.dashArray = '6,6';
+        }
+
+        var line = L.polyline(drawingPoints, lineOptions);
+
+        attachEraser(line);
+        userDrawings.addLayer(line);
+      }
+
+      resetDrawingState();
+    }
+
+    function clearDrawings() {
+      userDrawings.clearLayers();
+      resetDrawingState();
+
+      document.getElementById('ruler-result').innerText =
+        "Click points on the map to measure distance.";
+
+      document.getElementById('draw-result').innerText =
+        "Select a shape to draw.";
+    }
+
+  </script>
+
+  <script src="https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.umd.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+
+</body>
+</html>
