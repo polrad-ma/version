@@ -121,92 +121,90 @@
       border-radius:4px;font-size:11px;padding:4px 6px;font-family:inherit;width:100%;cursor:pointer;
     }
 
-    #snapshotPanel{ display:none; }
+    #advancePanel{ display:none; }
 
-    #snapshotPanel.snapshot-in-sidebar{
+    #advancePanel.advance-in-sidebar{
       display:block;
       padding:10px 12px;
       border-bottom:1px solid var(--border);
     }
-    #snapshotPanel.snapshot-in-sidebar .snapshot-title{ display:block; }
+    #advancePanel.advance-in-sidebar .advance-bar-label{ display:block; }
 
-    #snapshotPanel.snapshot-in-sidebar #snapshotDescBox{
-      background:#1a1f2b;border:2px solid #2d5aed;border-radius:10px;padding:14px 16px;
-      min-height:120px;color:#6b8cff;font-family:ui-monospace,Consolas,monospace;
-      font-size:15px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;
+    #advancePanel.advance-in-sidebar #advanceTextBox{
+      background:#1a1f2b;
+      border:2px solid #2d5aed;
+      border-radius:10px;
+      padding:12px 14px;
+      min-height:100px;
+      color:#6b8cff;
+      font-family:ui-monospace,Consolas,monospace;
+      font-size:13.5px;
+      line-height:1.45;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      overflow-wrap:break-word;
+      position:relative;
     }
-    :root[data-theme="light"] #snapshotPanel.snapshot-in-sidebar #snapshotDescBox{background:#eef3ff;color:#2d5aed;}
-    #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-placeholder{color:#6b8cff;opacity:.85;}
-    :root[data-theme="light"] #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-placeholder{color:#2d5aed;}
-    #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-meta{display:block;color:#8ba7ff;font-size:11px;margin-top:8px;opacity:.7;}
-    :root[data-theme="light"] #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-meta{color:#4a72c9;}
+    :root[data-theme="light"] #advancePanel.advance-in-sidebar #advanceTextBox{background:#eef3ff;color:#2d5aed;}
+    #advancePanel.advance-in-sidebar #advanceTextBox .advance-placeholder{color:#6b8cff;opacity:.85;}
+    :root[data-theme="light"] #advancePanel.advance-in-sidebar #advanceTextBox .advance-placeholder{color:#2d5aed;}
 
-    .snapshot-title{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-      color:var(--sub);
-      margin:0 0 8px;
-    }
-
-    #snapshotNavRow{
+    #advanceNavRow{
       display:flex;
-      gap:10px;
+      gap:8px;
       align-items:stretch;
       margin-top:8px;
     }
-
-    .snapshot-nav-btn{
+    .advance-nav-btn{
       flex:1;
       background:transparent;
       border:2px solid #2d5aed;
       border-radius:8px;
-      padding:8px 0;
+      padding:6px 0;
       display:flex;align-items:center;justify-content:center;
-      color:#2d5aed;font-size:26px;line-height:1;
+      color:#2d5aed;font-size:22px;line-height:1;
       cursor:pointer;transition:background .12s,border-color .12s,color .12s;
-      min-height:44px;
+      min-height:40px;
     }
-    .snapshot-nav-btn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
-    .snapshot-nav-btn svg{width:26px;height:26px;}
+    .advance-nav-btn:hover:not(:disabled){background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
+    .advance-nav-btn:disabled{opacity:.35;cursor:default;}
+    .advance-nav-btn svg{width:22px;height:22px;}
 
-    #snapshotLockBtn{
-      flex:0 0 60px;
+    #advanceLockBtn{
+      flex:0 0 56px;
       background:transparent;
       border:2px solid #2d5aed;
       border-radius:8px;
       padding:0;
       display:flex;align-items:center;justify-content:center;
-      color:#2d5aed;font-size:20px;
+      color:#2d5aed;font-size:18px;
       cursor:pointer;transition:background .18s,border-color .18s,color .18s,box-shadow .18s;
-      min-height:44px;
-      position:relative;
+      min-height:40px;
     }
-    #snapshotLockBtn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
-    #snapshotLockBtn svg{width:22px;height:22px;transition:transform .18s;}
-    #snapshotLockBtn.locked{
+    #advanceLockBtn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
+    #advanceLockBtn svg{width:18px;height:18px;}
+    #advanceLockBtn.locked{
       background:#2d5aed;
       border-color:#4b75ff;
       color:#fff;
-      box-shadow:0 0 0 3px #2d5aed33, 0 0 18px 2px #2d5aedcc;
-      animation:snapshotLockPulse 2.2s ease-in-out infinite;
+      box-shadow:0 0 0 3px #2d5aed33, 0 0 16px 2px #2d5aedcc;
+      animation:advanceLockPulse 2.2s ease-in-out infinite;
     }
-    #snapshotLockBtn.locked:hover{
+    #advanceLockBtn.locked:hover{
       background:#3f6fff;
       border-color:#5e86ff;
-      box-shadow:0 0 0 3px #3f6fff33, 0 0 22px 3px #3f6fffee;
+      box-shadow:0 0 0 3px #3f6fff33, 0 0 20px 3px #3f6fffee;
     }
-    @keyframes snapshotLockPulse{
-      0%, 100% { box-shadow:0 0 0 3px #2d5aed33, 0 0 18px 2px #2d5aedcc; }
-      50%      { box-shadow:0 0 0 4px #2d5aed44, 0 0 24px 4px #2d5aede6; }
+    @keyframes advanceLockPulse{
+      0%, 100% { box-shadow:0 0 0 3px #2d5aed33, 0 0 16px 2px #2d5aedcc; }
+      50%      { box-shadow:0 0 0 4px #2d5aed44, 0 0 22px 4px #2d5aede6; }
     }
 
-    #snapshotMeta{
+    #advancePanel.advance-in-sidebar #advanceMetaLine{
       font-size:10.5px;color:var(--sub);text-align:center;letter-spacing:.02em;margin-top:6px;
     }
 
-    /* Bottom-bar placement — single horizontal strip, Polrad advance-bar shape. */
-    #snapshotPanel.snapshot-in-bar{
+    #advancePanel.advance-in-bar{
       display:flex;
       position:fixed;
       bottom:18px;
@@ -214,10 +212,10 @@
       transform:translateX(-50%);
       z-index:1250;
       width:min(920px,calc(100% - 100px));
-      min-height:42px;
+      min-height:46px;
       align-items:center;
       gap:8px;
-      padding:5px 8px;
+      padding:6px 8px;
       background:var(--panel);
       border:1px solid var(--border);
       border-radius:9px;
@@ -225,55 +223,47 @@
       flex-direction:row;
       flex-wrap:nowrap;
     }
-    :root[data-theme="light"] #snapshotPanel.snapshot-in-bar{
+    :root[data-theme="light"] #advancePanel.advance-in-bar{
       box-shadow:0 6px 24px #1a1e2933;
     }
-    #snapshotPanel.snapshot-in-bar .snapshot-title{ display:none; }
-    #snapshotPanel.snapshot-in-bar #snapshotDescBox{
+    #advancePanel.advance-in-bar .advance-bar-label{ display:none; }
+    #advancePanel.advance-in-bar #advanceTextBox{
       flex:1;
       min-width:0;
       min-height:0;
-      max-height:32px;
-      padding:0 10px;
+      max-height:34px;
+      padding:0 8px;
       background:transparent;
       border:none;
       border-radius:0;
       color:var(--text);
       font-family:inherit;
       font-size:13px;
-      line-height:32px;
+      line-height:34px;
       display:flex;
       align-items:center;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      font-weight:600;
     }
-    #snapshotPanel.snapshot-in-bar #snapshotDescBox .snapshot-placeholder{
+    #advancePanel.advance-in-bar #advanceTextBox .advance-placeholder{
       color:var(--sub);
       opacity:1;
       font-size:13px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      font-weight:500;
     }
-    #snapshotPanel.snapshot-in-bar #snapshotDescBox .snapshot-meta{
-      display:inline;
-      color:var(--sub);
-      font-size:12px;
-      margin-top:0;
-      margin-left:10px;
-      opacity:.75;
-      font-weight:700;
-      flex:0 0 auto;
-    }
-    #snapshotPanel.snapshot-in-bar #snapshotNavRow{
+    #advancePanel.advance-in-bar #advanceNavRow{
       flex:0 0 auto;
       margin:0;
       gap:6px;
       align-items:center;
       display:flex;
     }
-    #snapshotPanel.snapshot-in-bar .snapshot-nav-btn{
+    #advancePanel.advance-in-bar .advance-nav-btn{
       flex:0 0 32px;
       width:32px;
       height:32px;
@@ -283,14 +273,14 @@
       border:1px solid var(--border);
       background:var(--panel2);
       color:var(--text);
-      font-size:22px;
+      font-size:20px;
     }
-    #snapshotPanel.snapshot-in-bar .snapshot-nav-btn:hover{
+    #advancePanel.advance-in-bar .advance-nav-btn:hover:not(:disabled){
       background:var(--panel3);
       border-color:var(--accent-hover);
     }
-    #snapshotPanel.snapshot-in-bar .snapshot-nav-btn svg{ width:20px; height:20px; }
-    #snapshotPanel.snapshot-in-bar #snapshotLockBtn{
+    #advancePanel.advance-in-bar .advance-nav-btn svg{ width:18px; height:18px; }
+    #advancePanel.advance-in-bar #advanceLockBtn{
       flex:0 0 32px;
       width:32px;
       height:32px;
@@ -302,38 +292,71 @@
       box-shadow:none;
       animation:none;
     }
-    #snapshotPanel.snapshot-in-bar #snapshotLockBtn:hover{
+    #advancePanel.advance-in-bar #advanceLockBtn:hover{
       background:var(--panel3);
       border-color:var(--accent-hover);
       box-shadow:none;
       animation:none;
     }
-    #snapshotPanel.snapshot-in-bar #snapshotLockBtn.locked{
+    #advancePanel.advance-in-bar #advanceLockBtn.locked{
       background:var(--accent);
       border-color:var(--accent);
       color:#fff;
       box-shadow:0 0 0 2px var(--accent-soft), 0 0 12px 1px var(--accent-hover);
       animation:none;
     }
-    #snapshotPanel.snapshot-in-bar #snapshotLockBtn.locked:hover{
+    #advancePanel.advance-in-bar #advanceLockBtn.locked:hover{
       background:var(--accent-hover);
       border-color:var(--accent-hover);
       box-shadow:0 0 0 2px var(--accent-soft), 0 0 14px 2px var(--accent-hover);
     }
-    #snapshotPanel.snapshot-in-bar #snapshotLockBtn svg{ width:16px; height:16px; }
-    #snapshotPanel.snapshot-in-bar #snapshotMeta{
-      display:block;
+    #advancePanel.advance-in-bar #advanceLockBtn svg{ width:16px; height:16px; }
+
+    #advanceAreaChip{
       flex:0 0 auto;
-      margin:0 0 0 4px;
-      font-size:10.5px;
-      color:var(--sub);
+      display:none;
+      font-size:11.5px;
+      font-weight:700;
+      padding:4px 9px;
+      border-radius:6px;
       white-space:nowrap;
+      letter-spacing:.01em;
+    }
+    #advanceAreaChip.red{ background:#e0526a22; color:#e0526a; border:1px solid #e0526a; }
+    #advanceAreaChip.blue{ background:#3254ad33; color:#5a82f0; border:1px solid #3254ad; }
+    #advanceAreaChip.neutral{ background:var(--panel2); color:var(--sub); border:1px solid var(--border); }
+    #advancePanel.advance-in-sidebar #advanceAreaChip{
+      position:absolute;top:10px;right:12px;
+      font-size:11px;padding:3px 7px;
     }
 
-    :root:not([data-device="mobile"]) body.sidebar-collapsed #snapshotPanel.snapshot-in-bar{ display:flex; }
-    :root:not([data-device="mobile"]) body:not(.sidebar-collapsed) #snapshotPanel.snapshot-in-bar{ display:none; }
-    :root[data-device="mobile"] body:not(.sidebar-expanded) #snapshotPanel.snapshot-in-bar{ display:flex; }
-    :root[data-device="mobile"] body.sidebar-expanded #snapshotPanel.snapshot-in-bar{ display:none; }
+    #advanceDateText{
+      flex:0 0 auto;
+      display:none;
+      font-size:11.5px;
+      color:var(--sub);
+      padding:0 8px;
+      white-space:nowrap;
+      border-left:1px solid var(--border);
+      padding-left:10px;
+    }
+    #advancePanel.advance-in-bar #advanceDateText{ display:block; }
+    #advancePanel.advance-in-sidebar #advanceDateText{ display:none; }
+
+    #advancePanel.advance-in-bar #advanceMetaLine{ display:none; }
+
+    :root:not([data-device="mobile"]) body.sidebar-collapsed #advancePanel.advance-in-bar{ display:flex; }
+    :root:not([data-device="mobile"]) body:not(.sidebar-collapsed) #advancePanel.advance-in-bar{ display:none; }
+    :root[data-device="mobile"] body:not(.sidebar-expanded) #advancePanel.advance-in-bar{ display:flex; }
+    :root[data-device="mobile"] body.sidebar-expanded #advancePanel.advance-in-bar{ display:none; }
+
+    .advance-bar-label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:var(--sub);
+      margin:0 0 8px;
+    }
 
     .credit-block{
       display:flex;flex-direction:column;gap:6px;align-items:flex-end;
@@ -349,7 +372,6 @@
     ::-webkit-scrollbar{width:8px;}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
-    /* Floating panels — LEFT side of the map. */
     .floating-panel{
       position:fixed;top:64px;left:14px;z-index:1200;display:none;
       background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px #0007;
@@ -397,7 +419,6 @@
     #rulerPanel .ruler-stat b{color:var(--good);}
     #rulerPanel .panel-drag-handle{width:100%;margin-bottom:2px;}
 
-    /* Search box back at top-center, always visible. */
     #searchBox{
       position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1200;
       width:min(340px,85vw);
@@ -513,9 +534,8 @@
     :root[data-device="mobile"] #rulerPanel{
       left:12px; right:12px; top:auto; bottom:80px; width:auto;
     }
-    :root[data-device="mobile"] #snapshotDescBox{ min-height:70px; font-size:12.5px; }
     :root[data-device="mobile"] #searchBox{ width:calc(100vw - 120px); }
-    :root[data-device="mobile"] #snapshotPanel.snapshot-in-bar{
+    :root[data-device="mobile"] #advancePanel.advance-in-bar{
       width:calc(100vw - 24px);
       bottom:12px;
     }
@@ -532,70 +552,72 @@
     <div id="crosshair">
       <div class="ch-line ch-h"></div>
       <div class="ch-line ch-v"></div>
-      <div class="ch-hotspot" title="View coordinates at the crosshair"></div>
+      <div class="ch-hotspot" data-i18n-title="crosshairHotspotTitle" title="View coordinates at the crosshair"></div>
     </div>
     <div id="watermark-overlay"></div>
   </div>
 
   <div id="sidebar">
     <div class="sidebar-header">
-      <h1>Russo-Ukrainian War Map</h1>
-      <p>Polrad Mapping · sandbox</p>
+      <h1 data-i18n="mapTitle">Russo-Ukrainian War Map</h1>
+      <p data-i18n="mapSubtitle">Polrad Mapping · sandbox</p>
     </div>
 
     <div class="toolbar">
-      <button id="btnToolRuler" style="flex:1;" title="Measure distance along a path">
+      <button id="btnToolRuler" style="flex:1;" data-i18n-title="toolRulerTitle" title="Measure distance along a path">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="1.5"/><line x1="7" y1="8" x2="7" y2="11"/><line x1="11" y1="8" x2="11" y2="11"/><line x1="15" y1="8" x2="15" y2="11"/><line x1="19" y1="8" x2="19" y2="11"/></svg>
-        Ruler
+        <span data-i18n="toolRuler">Ruler</span>
       </button>
-      <button id="btnToolDraw" style="flex:1;" title="Freehand sketch/annotate on the map">
+      <button id="btnToolDraw" style="flex:1;" data-i18n-title="toolDrawTitle" title="Freehand sketch/annotate on the map">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Draw
+        <span data-i18n="toolDraw">Draw</span>
       </button>
-      <button id="btnToolCoord" style="flex:1;" title="Click anywhere on the map to look up its coordinates">
+      <button id="btnToolCoord" style="flex:1;" data-i18n-title="toolCoordTitle" title="Click anywhere on the map to look up its coordinates">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
-        Coords
+        <span data-i18n="toolCoord">Coords</span>
       </button>
     </div>
 
     <div class="overlay-section">
-      <h3>Layers</h3>
+      <h3 data-i18n="layersHeading">Layers</h3>
       <div id="grouped-layer-container"></div>
     </div>
 
     <div class="overlay-section">
-      <h3>Terrain</h3>
+      <h3 data-i18n="terrainHeading">Terrain</h3>
       <div class="overlay-row">
         <input type="checkbox" id="chkTerrain">
-        <label for="chkTerrain">Elevation overlay</label>
+        <label for="chkTerrain" data-i18n="terrainToggle">Elevation overlay</label>
       </div>
       <div class="overlay-sub" id="terrainOpts" style="display:none;">
         <select id="terrainMode">
-          <option value="color">Color (hypsometric)</option>
-          <option value="bw">Black &amp; white</option>
-          <option value="black-transparent">Black, transparent</option>
+          <option value="color" data-i18n="terrainColor">Color (hypsometric)</option>
+          <option value="bw" data-i18n="terrainBW">Black &amp; white</option>
+          <option value="black-transparent" data-i18n="terrainBlackTransparent">Black, transparent</option>
         </select>
       </div>
     </div>
 
-    <div id="snapshotPanel" class="snapshot-in-sidebar">
-      <div class="snapshot-title">Snapshots</div>
-      <div id="snapshotDescBox">
-        <span class="snapshot-placeholder">Snapshot description</span>
+    <div id="advancePanel" class="advance-in-sidebar">
+      <div class="advance-bar-label" data-i18n="advanceBarLabel">Advance</div>
+      <div id="advanceTextBox">
+        <span class="advance-placeholder" data-i18n="advancePlaceholder">No advance selected</span>
+        <span id="advanceAreaChip" class="neutral"></span>
       </div>
-      <div id="snapshotNavRow">
-        <button class="snapshot-nav-btn" id="btnSnapPrev" title="Previous snapshot">
+      <div id="advanceNavRow">
+        <button class="advance-nav-btn" id="btnAdvPrev" data-i18n-title="advancePrevTitle" title="Previous advance">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <button id="snapshotLockBtn" title="Lock map position while navigating snapshots">
+        <button id="advanceLockBtn" data-i18n-title="advanceLockTitle" title="Lock map position while navigating advances">
           <svg class="icon-unlocked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
           <svg class="icon-locked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         </button>
-        <button class="snapshot-nav-btn" id="btnSnapNext" title="Next snapshot">
+        <button class="advance-nav-btn" id="btnAdvNext" data-i18n-title="advanceNextTitle" title="Next advance">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </button>
       </div>
-      <div id="snapshotMeta">Unlocked</div>
+      <div id="advanceDateText"></div>
+      <div id="advanceMetaLine">—</div>
     </div>
 
     <div class="credit-block">
@@ -614,8 +636,8 @@
     <span id="searchIcon">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg>
     </span>
-    <input id="searchInput" type="text" placeholder="Search place or coordinates…" autocomplete="off">
-    <button id="searchGoBtn" title="Search">
+    <input id="searchInput" type="text" data-i18n-placeholder="searchPlaceholder" placeholder="Search place or coordinates…" autocomplete="off">
+    <button id="searchGoBtn" data-i18n-title="searchGoTitle" title="Search">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </button>
   </div>
@@ -623,75 +645,272 @@
 </div>
 
 <div id="rulerPanel">
-  <div class="panel-drag-handle" title="Drag to move"></div>
+  <div class="panel-drag-handle" data-i18n-title="panelDragTitle" title="Drag to move"></div>
   <button class="panel-close-btn" title="Close">×</button>
-  <span class="ruler-stat">Distance: <b id="rulerDistance">0 m</b></span>
-  <span class="ruler-stat" id="rulerAreaWrap" style="display:none;">Area: <b id="rulerArea">0 m²</b></span>
-  <button id="btnRulerClear" class="small">
+  <span class="ruler-stat"><span data-i18n="rulerDistance">Distance</span>: <b id="rulerDistance">0 m</b></span>
+  <span class="ruler-stat" id="rulerAreaWrap" style="display:none;"><span data-i18n="rulerArea">Area</span>: <b id="rulerArea">0 m²</b></span>
+  <button id="btnRulerClear" class="small" data-i18n-title="rulerClearTitle" title="Clear">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>
-    Clear
+    <span data-i18n="clearBtn">Clear</span>
   </button>
 </div>
 
 <div class="floating-panel" id="panel-draw">
-  <div class="panel-drag-handle" title="Drag to move"></div>
+  <div class="panel-drag-handle" data-i18n-title="panelDragTitle" title="Drag to move"></div>
   <button class="panel-close-btn" title="Close">×</button>
-  <h4>Draw tools</h4>
+  <h4 data-i18n="drawPanelTitle">Draw tools</h4>
 
-  <div class="tool-group-header">Solid tools</div>
-  <button class="tool-btn" id="btn-freehand" onclick="setActiveTool('freehand')">Freehand</button>
-  <button class="tool-btn" id="btn-freehand-arrow" onclick="setActiveTool('freehand-arrow')">Freehand arrow</button>
-  <button class="tool-btn" id="btn-line" onclick="setActiveTool('line')">Line</button>
-  <button class="tool-btn" id="btn-arrow" onclick="setActiveTool('arrow')">Arrow</button>
+  <div class="tool-group-header" data-i18n="toolGroupSolid">Solid tools</div>
+  <button class="tool-btn" id="btn-freehand" onclick="setActiveTool('freehand')" data-i18n="toolFreehand">Freehand</button>
+  <button class="tool-btn" id="btn-freehand-arrow" onclick="setActiveTool('freehand-arrow')" data-i18n="toolFreehandArrow">Freehand arrow</button>
+  <button class="tool-btn" id="btn-line" onclick="setActiveTool('line')" data-i18n="toolLine">Line</button>
+  <button class="tool-btn" id="btn-arrow" onclick="setActiveTool('arrow')" data-i18n="toolArrow">Arrow</button>
 
-  <div class="tool-group-header">Dashed tools</div>
-  <button class="tool-btn" id="btn-dashed-freehand" onclick="setActiveTool('dashed-freehand')">Dashed freehand</button>
-  <button class="tool-btn" id="btn-dashed-freehand-arrow" onclick="setActiveTool('dashed-freehand-arrow')">Dashed freehand arrow</button>
-  <button class="tool-btn" id="btn-dashed-line" onclick="setActiveTool('dashed-line')">Dashed line</button>
-  <button class="tool-btn" id="btn-dashed-arrow" onclick="setActiveTool('dashed-arrow')">Dashed arrow</button>
+  <div class="tool-group-header" data-i18n="toolGroupDashed">Dashed tools</div>
+  <button class="tool-btn" id="btn-dashed-freehand" onclick="setActiveTool('dashed-freehand')" data-i18n="toolDashedFreehand">Dashed freehand</button>
+  <button class="tool-btn" id="btn-dashed-freehand-arrow" onclick="setActiveTool('dashed-freehand-arrow')" data-i18n="toolDashedFreehandArrow">Dashed freehand arrow</button>
+  <button class="tool-btn" id="btn-dashed-line" onclick="setActiveTool('dashed-line')" data-i18n="toolDashedLine">Dashed line</button>
+  <button class="tool-btn" id="btn-dashed-arrow" onclick="setActiveTool('dashed-arrow')" data-i18n="toolDashedArrow">Dashed arrow</button>
 
-  <div class="tool-group-header">Shapes &amp; utilities</div>
-  <button class="tool-btn" id="btn-polygon" onclick="setActiveTool('polygon')">Polygon</button>
-  <button class="tool-btn" id="btn-rectangle" onclick="setActiveTool('rectangle')">Rectangle</button>
-  <button class="tool-btn" id="btn-flag-ua" onclick="setActiveTool('flag-ua')">🇺🇦 Ukraine flag</button>
-  <button class="tool-btn" id="btn-flag-ru" onclick="setActiveTool('flag-ru')">🇷🇺 Russia flag</button>
-  <button class="tool-btn" id="btn-eraser" onclick="setActiveTool('eraser')">Eraser</button>
+  <div class="tool-group-header" data-i18n="toolGroupShapes">Shapes &amp; utilities</div>
+  <button class="tool-btn" id="btn-polygon" onclick="setActiveTool('polygon')" data-i18n="toolPolygon">Polygon</button>
+  <button class="tool-btn" id="btn-rectangle" onclick="setActiveTool('rectangle')" data-i18n="toolRectangle">Rectangle</button>
+  <button class="tool-btn" id="btn-flag-ua" onclick="setActiveTool('flag-ua')" data-i18n="toolFlagUA">🇺🇦 Ukraine flag</button>
+  <button class="tool-btn" id="btn-flag-ru" onclick="setActiveTool('flag-ru')" data-i18n="toolFlagRU">🇷🇺 Russia flag</button>
+  <button class="tool-btn" id="btn-eraser" onclick="setActiveTool('eraser')" data-i18n="toolEraser">Eraser</button>
 
   <div class="thickness-row" style="margin-top:10px;">
-    <label>Thickness: <span id="thickness-val">3px</span></label>
+    <label><span data-i18n="thicknessLabel">Thickness</span>: <span id="thickness-val">3px</span></label>
     <input type="range" id="thickness-slider" min="1" max="15" value="3" oninput="setThickness(this.value)">
   </div>
 
   <div id="color-row">
-    <span class="color-btn selected" id="color-red" style="background:#ff0000; color:white;" onclick="setColor('#ff0000')">Red</span>
-    <span class="color-btn" id="color-blue" style="background:#0000ff; color:white;" onclick="setColor('#0000ff')">Blue</span>
-    <span class="color-btn" id="color-green" style="background:#2ecc71; color:white;" onclick="setColor('#2ecc71')">Green</span>
-    <span class="color-btn" id="color-yellow" style="background:#f1c40f; color:black;" onclick="setColor('#f1c40f')">Yellow</span>
-    <span class="color-btn" id="color-black" style="background:#171717; color:white;" onclick="setColor('#171717')">Black</span>
-    <span class="color-btn" id="color-white" style="background:#ffffff; color:black;" onclick="setColor('#ffffff')">White</span>
+    <span class="color-btn selected" id="color-red" style="background:#ff0000; color:white;" onclick="setColor('#ff0000')" data-i18n="colorRed">Red</span>
+    <span class="color-btn" id="color-blue" style="background:#0000ff; color:white;" onclick="setColor('#0000ff')" data-i18n="colorBlue">Blue</span>
+    <span class="color-btn" id="color-green" style="background:#2ecc71; color:white;" onclick="setColor('#2ecc71')" data-i18n="colorGreen">Green</span>
+    <span class="color-btn" id="color-yellow" style="background:#f1c40f; color:black;" onclick="setColor('#f1c40f')" data-i18n="colorYellow">Yellow</span>
+    <span class="color-btn" id="color-black" style="background:#171717; color:white;" onclick="setColor('#171717')" data-i18n="colorBlack">Black</span>
+    <span class="color-btn" id="color-white" style="background:#ffffff; color:black;" onclick="setColor('#ffffff')" data-i18n="colorWhite">White</span>
   </div>
 
-  <button class="tool-btn" onclick="finishShape()">Finish shape</button>
-  <button class="tool-btn" onclick="clearDrawings()">Clear my drawings</button>
+  <button class="tool-btn" onclick="finishShape()" data-i18n="finishShape">Finish shape</button>
+  <button class="tool-btn" onclick="clearDrawings()" data-i18n="clearDrawings">Clear my drawings</button>
 
-  <div class="panel-result" id="draw-result">Select a shape to draw.</div>
+  <div class="panel-result" id="draw-result" data-i18n="selectShape">Select a shape to draw.</div>
 </div>
 
 <div class="floating-panel" id="panel-coords">
-  <div class="panel-drag-handle" title="Drag to move"></div>
+  <div class="panel-drag-handle" data-i18n-title="panelDragTitle" title="Drag to move"></div>
   <button class="panel-close-btn" title="Close">×</button>
-  <h4>Coordinates</h4>
-  <div class="panel-result" id="coords-result">Click anywhere on the map to display its precise coordinates.</div>
+  <h4 data-i18n="coordsPanelTitle">Coordinates</h4>
+  <div class="panel-result" id="coords-result" data-i18n="coordsPrompt">Click anywhere on the map to display its precise coordinates.</div>
 </div>
 
 <script>
 
+  /* ===================== i18n ===================== */
+  var STRINGS = {
+    en: {
+      mapTitle: "Russo-Ukrainian War Map",
+      mapSubtitle: "Polrad Mapping · sandbox",
+      toolRuler: "Ruler", toolDraw: "Draw", toolCoord: "Coords",
+      toolRulerTitle: "Measure distance along a path",
+      toolDrawTitle: "Freehand sketch/annotate on the map",
+      toolCoordTitle: "Click anywhere on the map to look up its coordinates",
+      layersHeading: "Layers",
+      terrainHeading: "Terrain",
+      terrainToggle: "Elevation overlay",
+      terrainColor: "Color (hypsometric)",
+      terrainBW: "Black & white",
+      terrainBlackTransparent: "Black, transparent",
+      searchPlaceholder: "Search place or coordinates…",
+      searchGoTitle: "Search",
+      crosshairHotspotTitle: "View coordinates at the crosshair",
+      panelDragTitle: "Drag to move",
+      drawPanelTitle: "Draw tools",
+      coordsPanelTitle: "Coordinates",
+      toolGroupSolid: "Solid tools",
+      toolGroupDashed: "Dashed tools",
+      toolGroupShapes: "Shapes & utilities",
+      toolFreehand: "Freehand",
+      toolFreehandArrow: "Freehand arrow",
+      toolLine: "Line",
+      toolArrow: "Arrow",
+      toolDashedFreehand: "Dashed freehand",
+      toolDashedFreehandArrow: "Dashed freehand arrow",
+      toolDashedLine: "Dashed line",
+      toolDashedArrow: "Dashed arrow",
+      toolPolygon: "Polygon",
+      toolRectangle: "Rectangle",
+      toolFlagUA: "🇺🇦 Ukraine flag",
+      toolFlagRU: "🇷🇺 Russia flag",
+      toolEraser: "Eraser",
+      thicknessLabel: "Thickness",
+      colorRed: "Red", colorBlue: "Blue", colorGreen: "Green",
+      colorYellow: "Yellow", colorBlack: "Black", colorWhite: "White",
+      finishShape: "Finish shape",
+      clearDrawings: "Clear my drawings",
+      selectShape: "Select a shape to draw.",
+      coordsPrompt: "Click anywhere on the map to display its precise coordinates.",
+      clearBtn: "Clear",
+      rulerDistance: "Distance",
+      rulerArea: "Area",
+      rulerClearTitle: "Clear",
+      advanceBarLabel: "Advance",
+      advancePlaceholder: "No advance selected",
+      advancePrevTitle: "Previous advance",
+      advanceNextTitle: "Next advance",
+      advanceLockTitle: "Lock map position while navigating advances",
+      advanceUnlockTitle: "Unlock — clicking again will let the map move freely",
+      instructions: {
+        polygon: "Click points to trace a shape, then click 'Finish shape'.",
+        freehand: "Click and drag on the map to draw freely.",
+        'freehand-arrow': "Click and drag to draw a line. An arrowhead will be added at the tip when you release.",
+        'dashed-freehand': "Click and drag on the map to draw a dashed line freely.",
+        'dashed-freehand-arrow': "Click and drag to draw a dashed line. An arrowhead will be added at the tip when you release.",
+        line: "Click points to draw a line, then click 'Finish shape'.",
+        'dashed-line': "Click points to draw a dashed line, then click 'Finish shape'.",
+        arrow: "Click start point, then click end point to place an arrow.",
+        'dashed-arrow': "Click start point, then click end point to place a dashed arrow.",
+        rectangle: "Click one corner, then click opposite corner.",
+        'flag-ua': "Click anywhere on the map to drop a Ukraine flag marker.",
+        'flag-ru': "Click anywhere on the map to drop a Russia flag marker.",
+        eraser: "Click on any drawn shape or line to erase it (arrows erase as a whole).",
+        coords: "Click anywhere on the map to display its precise coordinates."
+      },
+      layerNames: {
+        russia: "Russian-controlled territory",
+        grayzone: "Gray zone",
+        forts: "Fortifications (Simple, PMapping832)",
+        towns: "Town borders (PWM)"
+      },
+      locked: "Locked", unlocked: "Unlocked"
+    },
+    ru: {
+      mapTitle: "Карта российско-украинской войны",
+      mapSubtitle: "Polrad Mapping · песочница",
+      toolRuler: "Линейка", toolDraw: "Рисовать", toolCoord: "Координаты",
+      toolRulerTitle: "Измерить расстояние по пути",
+      toolDrawTitle: "Рисование/аннотирование на карте от руки",
+      toolCoordTitle: "Нажмите в любом месте карты, чтобы узнать координаты",
+      layersHeading: "Слои",
+      terrainHeading: "Рельеф",
+      terrainToggle: "Слой рельефа",
+      terrainColor: "Цветной (гипсометрический)",
+      terrainBW: "Чёрно-белый",
+      terrainBlackTransparent: "Чёрный, прозрачный",
+      searchPlaceholder: "Поиск места или координат…",
+      searchGoTitle: "Поиск",
+      crosshairHotspotTitle: "Показать координаты в центре прицела",
+      panelDragTitle: "Перетащите, чтобы переместить",
+      drawPanelTitle: "Инструменты рисования",
+      coordsPanelTitle: "Координаты",
+      toolGroupSolid: "Сплошные инструменты",
+      toolGroupDashed: "Пунктирные инструменты",
+      toolGroupShapes: "Фигуры и утилиты",
+      toolFreehand: "Свободная линия",
+      toolFreehandArrow: "Свободная стрелка",
+      toolLine: "Линия",
+      toolArrow: "Стрелка",
+      toolDashedFreehand: "Пунктирная свободная",
+      toolDashedFreehandArrow: "Пунктирная свободная стрелка",
+      toolDashedLine: "Пунктирная линия",
+      toolDashedArrow: "Пунктирная стрелка",
+      toolPolygon: "Полигон",
+      toolRectangle: "Прямоугольник",
+      toolFlagUA: "🇺🇦 Флаг Украины",
+      toolFlagRU: "🇷🇺 Флаг России",
+      toolEraser: "Ластик",
+      thicknessLabel: "Толщина",
+      colorRed: "Красный", colorBlue: "Синий", colorGreen: "Зелёный",
+      colorYellow: "Жёлтый", colorBlack: "Чёрный", colorWhite: "Белый",
+      finishShape: "Завершить фигуру",
+      clearDrawings: "Очистить мои рисунки",
+      selectShape: "Выберите фигуру для рисования.",
+      coordsPrompt: "Нажмите в любом месте карты, чтобы увидеть точные координаты.",
+      clearBtn: "Очистить",
+      rulerDistance: "Расстояние",
+      rulerArea: "Площадь",
+      rulerClearTitle: "Очистить",
+      advanceBarLabel: "Продвижение",
+      advancePlaceholder: "Продвижение не выбрано",
+      advancePrevTitle: "Предыдущее продвижение",
+      advanceNextTitle: "Следующее продвижение",
+      advanceLockTitle: "Заблокировать положение карты при навигации по продвижениям",
+      advanceUnlockTitle: "Разблокировать — повторное нажатие позволит свободно двигать карту",
+      instructions: {
+        polygon: "Нажимайте точки, чтобы обвести фигуру, затем нажмите «Завершить фигуру».",
+        freehand: "Зажмите кнопку мыши и рисуйте свободно.",
+        'freehand-arrow': "Зажмите кнопку мыши и нарисуйте линию. После отпускания на конце появится стрелка.",
+        'dashed-freehand': "Зажмите кнопку мыши и рисуйте пунктирную линию.",
+        'dashed-freehand-arrow': "Зажмите кнопку мыши и нарисуйте пунктирную линию. После отпускания появится стрелка.",
+        line: "Нажимайте точки, чтобы нарисовать линию, затем нажмите «Завершить фигуру».",
+        'dashed-line': "Нажимайте точки, чтобы нарисовать пунктирную линию, затем нажмите «Завершить фигуру».",
+        arrow: "Нажмите начальную точку, затем конечную, чтобы поставить стрелку.",
+        'dashed-arrow': "Нажмите начальную точку, затем конечную, чтобы поставить пунктирную стрелку.",
+        rectangle: "Нажмите один угол, затем противоположный.",
+        'flag-ua': "Нажмите на карте, чтобы поставить флаг Украины.",
+        'flag-ru': "Нажмите на карте, чтобы поставить флаг России.",
+        eraser: "Нажмите на нарисованную фигуру или линию, чтобы удалить её (стрелки удаляются целиком).",
+        coords: "Нажмите в любом месте карты, чтобы увидеть точные координаты."
+      },
+      layerNames: {
+        russia: "Территория под контролем России",
+        grayzone: "Серая зона",
+        forts: "Укрепления (Simple, PMapping832)",
+        towns: "Границы городов (PWM)"
+      },
+      locked: "Заблокировано", unlocked: "Разблокировано"
+    }
+  };
+  var currentLang = 'en';
+  try { currentLang = localStorage.getItem('polradLang_v1') === 'ru' ? 'ru' : 'en'; } catch (e) {}
+
+  function t(key) {
+    var pack = STRINGS[currentLang] || STRINGS.en;
+    return (pack[key] !== undefined ? pack[key] : (STRINGS.en[key] !== undefined ? STRINGS.en[key] : key));
+  }
+  function ti(tool) {
+    var pack = STRINGS[currentLang] || STRINGS.en;
+    return (pack.instructions && pack.instructions[tool]) || (STRINGS.en.instructions[tool] || '');
+  }
+  function tl(layerKey, fallback) {
+    var pack = STRINGS[currentLang] || STRINGS.en;
+    return (pack.layerNames && pack.layerNames[layerKey]) || fallback;
+  }
+  function applyLanguage() {
+    document.documentElement.lang = currentLang;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function(el){
+      el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+      el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+    });
+    var langBtn = document.getElementById('langToggle');
+    if (langBtn) langBtn.textContent = currentLang === 'en' ? 'EN' : 'RU';
+    updateSidebarLayerControl();
+    updateInstructions();
+    if (advIndex >= 0) renderAdvance();
+  }
+  function setLanguage(lang) {
+    currentLang = (lang === 'ru') ? 'ru' : 'en';
+    try { localStorage.setItem('polradLang_v1', currentLang); } catch (e) {}
+    applyLanguage();
+  }
+
+  /* ===================== THEME ===================== */
   function currentTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
   function applyTheme(theme){
     if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
     else document.documentElement.removeAttribute('data-theme');
     try { localStorage.setItem('polradTheme_v1', theme); } catch (e) {}
   }
+
+  /* ===================== MAP ===================== */
+  var LIVE_ROOT = 'https://raw.githubusercontent.com/polrad-ma/version/main/';
 
   var esriHybrid = L.layerGroup([
     L.tileLayer(
@@ -723,24 +942,15 @@
     layers: [baseLayers[currentBasemapKey].layer]
   });
 
-  var scaleControl = L.control.scale({
-    position: 'bottomleft', metric: true, imperial: true, maxWidth: 150
-  }).addTo(map);
+  L.control.scale({ position: 'bottomleft', metric: true, imperial: true, maxWidth: 150 }).addTo(map);
 
-  map.createPane('terrainPane');
-  map.getPane('terrainPane').style.zIndex = 400;
-  map.createPane('territoryPane');
-  map.getPane('territoryPane').style.zIndex = 420;
-  map.createPane('grayZonePane');
-  map.getPane('grayZonePane').style.zIndex = 460;
-  map.createPane('fortsPane');
-  map.getPane('fortsPane').style.zIndex = 480;
-  map.createPane('townsPane');
-  map.getPane('townsPane').style.zIndex = 490;
-  map.createPane('drawingsPane');
-  map.getPane('drawingsPane').style.zIndex = 650;
-  map.createPane('markersPane');
-  map.getPane('markersPane').style.zIndex = 700;
+  map.createPane('terrainPane');   map.getPane('terrainPane').style.zIndex = 400;
+  map.createPane('territoryPane'); map.getPane('territoryPane').style.zIndex = 420;
+  map.createPane('grayZonePane');  map.getPane('grayZonePane').style.zIndex = 460;
+  map.createPane('fortsPane');     map.getPane('fortsPane').style.zIndex = 480;
+  map.createPane('townsPane');     map.getPane('townsPane').style.zIndex = 490;
+  map.createPane('drawingsPane');  map.getPane('drawingsPane').style.zIndex = 650;
+  map.createPane('markersPane');   map.getPane('markersPane').style.zIndex = 700;
 
   ['polyline', 'polygon', 'rectangle'].forEach(function(name) {
     var original = L[name];
@@ -750,6 +960,7 @@
     };
   });
 
+  /* ---- Crosshair ---- */
   var CROSSHAIR_STORAGE_KEY = 'polradCrosshair_v1';
   var crosshairEl = document.getElementById('crosshair');
   var crosshairHotspot = crosshairEl.querySelector('.ch-hotspot');
@@ -761,6 +972,7 @@
   }
   try { setCrosshairVisible(localStorage.getItem(CROSSHAIR_STORAGE_KEY) === '1'); } catch (e) {}
 
+  /* ---- Coordinate popup helpers ---- */
   var COPY_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
   var CHECK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>';
   var LINK_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><line x1="8.3" y1="10.8" x2="15.7" y2="7.2"/><line x1="8.3" y1="13.2" x2="15.7" y2="16.8"/></svg>';
@@ -832,17 +1044,18 @@
       document.body.classList.toggle('sidebar-collapsed', collapsed);
       document.body.classList.remove('sidebar-expanded');
     }
-    var snap = document.getElementById('snapshotPanel');
+    var panel = document.getElementById('advancePanel');
     if (collapsed) {
-      snap.classList.remove('snapshot-in-sidebar');
-      snap.classList.add('snapshot-in-bar');
+      panel.classList.remove('advance-in-sidebar');
+      panel.classList.add('advance-in-bar');
     } else {
-      snap.classList.remove('snapshot-in-bar');
-      snap.classList.add('snapshot-in-sidebar');
+      panel.classList.remove('advance-in-bar');
+      panel.classList.add('advance-in-sidebar');
     }
     setTimeout(function(){ map.invalidateSize(); }, 260);
   }
 
+  /* ===================== CONTROLS ===================== */
   var SidebarToggleControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -1129,6 +1342,25 @@
   });
   map.addControl(new ThemeControl());
 
+  var LangControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.id = 'langToggle';
+      btn.textContent = currentLang === 'en' ? 'EN' : 'RU';
+      btn.style.fontSize = '11.5px';
+      btn.style.fontWeight = '700';
+      btn.title = 'Toggle language / Переключить язык';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){
+        setLanguage(currentLang === 'en' ? 'ru' : 'en');
+      });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
+  });
+  map.addControl(new LangControl());
+
   var CrosshairToggleControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -1174,36 +1406,41 @@
   });
   map.addControl(new DeviceControl());
 
-  /* --- Layers --- */
+  /* ===================== LAYERS ===================== */
   var mainLayers = {};
   var extraLayers = {};
+
   var layerFiles = [
     {
       file: 'russia.geojson',
       layerKey: 'russia',
-      name: 'Russian-controlled territory',
+      name: 'russia',
+      liveRoot: LIVE_ROOT,
       color: '#a52714',
       outlineColor: '#ff0000',
       group: 'main',
       noOutline: false,
       smoothFactor: 2.0,
-      pane: 'territoryPane'
+      pane: 'territoryPane',
+      swappable: true
     },
     {
       file: 'grayzone.geojson',
       layerKey: 'grayzone',
-      name: 'Gray zone',
+      name: 'grayzone',
+      liveRoot: LIVE_ROOT,
       color: '#c3c3c3',
       outlineColor: '#b4b4b4',
       group: 'main',
       noOutline: false,
       smoothFactor: 2.0,
-      pane: 'grayZonePane'
+      pane: 'grayZonePane',
+      swappable: true
     },
     {
       file: 'forts.geojson',
       layerKey: 'forts',
-      name: 'Fortifications (Simple, PMapping832)',
+      name: 'forts',
       color: '#00ffff',
       outlineColor: '#00ffff',
       group: 'main',
@@ -1217,7 +1454,7 @@
     {
       file: 'towns.geojson',
       layerKey: 'towns',
-      name: 'Town borders (PWM)',
+      name: 'towns',
       color: '#ffffff',
       outlineColor: '#ffffff',
       group: 'extra',
@@ -1230,9 +1467,9 @@
     }
   ];
 
-  function fetchGeoJSON(file) {
-    var bust = (file.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now();
-    return fetch(file + bust, { cache: 'no-store' }).then(function(r){
+  function fetchGeoJSON(url) {
+    var bust = (url.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now();
+    return fetch(url + bust, { cache: 'no-store' }).then(function(r){
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     });
@@ -1266,7 +1503,7 @@
             L.popup({ className: 'polygon-edit-popup' })
               .setLatLng(e.latlng)
               .setContent(
-                '<b>' + layerInfo.name + '</b><br>' +
+                '<b>' + tl(layerInfo.layerKey, layerInfo.name) + '</b><br>' +
                 '<b>Area:</b> ' + (areaM / 1e6).toFixed(2) + ' km² (' + (areaM / 2589988.11).toFixed(2) + ' sq mi)'
               )
               .openOn(map);
@@ -1278,14 +1515,13 @@
   }
 
   layerFiles.forEach(function(layerInfo){
-    fetchGeoJSON(layerInfo.file)
+    var url = (layerInfo.liveRoot || '') + layerInfo.file;
+    fetchGeoJSON(url)
       .then(function(data){
         var layer = makeGeoLayer(layerInfo, data);
-        if (layerInfo.group === 'main') {
-          mainLayers[layerInfo.name] = layer;
-        } else {
-          extraLayers[layerInfo.name] = layer;
-        }
+        layer._layerInfo = layerInfo;
+        if (layerInfo.group === 'main') mainLayers[layerInfo.name] = layer;
+        else extraLayers[layerInfo.name] = layer;
         if (!layerInfo.defaultOff) layer.addTo(map);
         updateSidebarLayerControl();
       })
@@ -1311,7 +1547,8 @@
       });
 
       var lbl = document.createElement('label');
-      lbl.textContent = name;
+      var lk = layer._layerInfo ? layer._layerInfo.layerKey : name;
+      lbl.textContent = tl(lk, name);
       lbl.addEventListener('click', function(){ cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); });
 
       row.appendChild(cb);
@@ -1327,7 +1564,7 @@
     if (extraKeys.length) {
       var heading = document.createElement('h3');
       heading.style.marginTop = '10px';
-      heading.textContent = 'Extra';
+      heading.textContent = currentLang === 'ru' ? 'Дополнительно' : 'Extra';
       container.appendChild(heading);
       extraKeys.forEach(function(name){
         container.appendChild(makeRow(name, extraLayers[name]));
@@ -1335,7 +1572,7 @@
     }
   }
 
-  /* --- 2D terrain overlay --- */
+  /* ===================== TERRAIN ===================== */
   var ELEV_STOPS = [
     [-5,  70, 170, 210],
     [0,   80, 200, 130],
@@ -1469,7 +1706,7 @@
     if (!container) return;
     if (terrainMode === 'black-transparent') { container.style.display = 'none'; return; }
     var steps = 8;
-    var rows = '<div class="legend-title">Elevation</div>';
+    var rows = '<div class="legend-title">' + (currentLang === 'ru' ? 'Высота' : 'Elevation') + '</div>';
     for (var i = steps; i >= 0; i--) {
       var elev = min + (i / steps) * (max - min);
       var c = elevColor(elev, min, max, terrainMode);
@@ -1521,28 +1758,195 @@
     if (is3DActive) updateOverlayImage();
   });
 
-  /* --- Snapshot placeholder --- */
-  var snapshotLocked = false;
-  var snapshotLockBtn = document.getElementById('snapshotLockBtn');
-  var snapshotMetaEl = document.getElementById('snapshotMeta');
-  function setSnapshotLocked(locked) {
-    snapshotLocked = !!locked;
-    snapshotLockBtn.classList.toggle('locked', snapshotLocked);
-    snapshotLockBtn.querySelector('.icon-unlocked').style.display = snapshotLocked ? 'none' : 'inline';
-    snapshotLockBtn.querySelector('.icon-locked').style.display = snapshotLocked ? 'inline' : 'none';
-    snapshotLockBtn.title = snapshotLocked
-      ? 'Unlock — clicking again will let the map move freely while browsing snapshots'
-      : 'Lock map position while navigating snapshots';
-    snapshotMetaEl.textContent = snapshotLocked ? 'Locked' : 'Unlocked';
-    try { localStorage.setItem('polradSnapshotLocked_v1', snapshotLocked ? '1' : '0'); } catch (e) {}
+  /* ===================== ADVANCES ===================== */
+  var ADVANCES_URL = LIVE_ROOT + 'advances.json';
+  var advances = [];
+  var advIndex = -1;
+  var advanceLocked = false;
+
+  var advanceTextBoxEl = document.getElementById('advanceTextBox');
+  var advanceAreaChipEl = document.getElementById('advanceAreaChip');
+  var advanceDateTextEl = document.getElementById('advanceDateText');
+  var advanceMetaLineEl = document.getElementById('advanceMetaLine');
+  var btnAdvPrev = document.getElementById('btnAdvPrev');
+  var btnAdvNext = document.getElementById('btnAdvNext');
+  var advanceLockBtn = document.getElementById('advanceLockBtn');
+
+  function advanceAreaDisplay(item) { return item ? (item.areaDisplay || '') : ''; }
+  function advanceAreaColor(item) {
+    if (!item) return 'neutral';
+    if (item.areaColor === 'blue') return 'blue';
+    if (item.areaColor === 'red') return 'red';
+    var eff = Array.isArray(item.areaEffects) ? item.areaEffects[0] : null;
+    if (eff) return eff.side === 'ua' ? 'blue' : 'red';
+    return item.side === 'ua' ? 'blue' : 'red';
   }
-  snapshotLockBtn.addEventListener('click', function(){ setSnapshotLocked(!snapshotLocked); });
-  try { setSnapshotLocked(localStorage.getItem('polradSnapshotLocked_v1') === '1'); } catch (e) { setSnapshotLocked(false); }
+  function advancePickText(item) {
+    if (!item) return '';
+    if (currentLang === 'ru') return item.text_ru || item.text_en || item.text || '';
+    return item.text_en || item.text || item.text_ru || '';
+  }
 
-  document.getElementById('btnSnapPrev').addEventListener('click', function(){ /* placeholder */ });
-  document.getElementById('btnSnapNext').addEventListener('click', function(){ /* placeholder */ });
+  function setAdvanceLocked(locked) {
+    advanceLocked = !!locked;
+    advanceLockBtn.classList.toggle('locked', advanceLocked);
+    advanceLockBtn.querySelector('.icon-unlocked').style.display = advanceLocked ? 'none' : 'inline';
+    advanceLockBtn.querySelector('.icon-locked').style.display = advanceLocked ? 'inline' : 'none';
+    advanceLockBtn.title = advanceLocked ? t('advanceUnlockTitle') : t('advanceLockTitle');
+    advanceMetaLineEl.textContent = advanceLocked ? t('locked') : t('unlocked');
+    try { localStorage.setItem('polradAdvanceLocked_v1', advanceLocked ? '1' : '0'); } catch (e) {}
+  }
+  advanceLockBtn.addEventListener('click', function(){ setAdvanceLocked(!advanceLocked); });
+  try { setAdvanceLocked(localStorage.getItem('polradAdvanceLocked_v1') === '1'); } catch (e) { setAdvanceLocked(false); }
 
-  /* --- Floating panels --- */
+  function renderAdvance() {
+    if (!advances.length) {
+      advanceTextBoxEl.innerHTML =
+        '<span class="advance-placeholder">' + t('advancePlaceholder') + '</span>' +
+        '<span id="advanceAreaChip" class="neutral"></span>';
+      advanceAreaChipEl = document.getElementById('advanceAreaChip');
+      advanceDateTextEl.textContent = '';
+      advanceMetaLineEl.textContent = '—';
+      btnAdvPrev.disabled = true;
+      btnAdvNext.disabled = true;
+      return;
+    }
+    var item = advances[advIndex];
+    var txt = advancePickText(item);
+    var area = advanceAreaDisplay(item);
+
+    advanceTextBoxEl.innerHTML =
+      '<span class="advance-text-main">' + (txt ? escapeHtml(txt) : '') + '</span>' +
+      '<span id="advanceAreaChip" class="' + advanceAreaColor(item) + '"></span>';
+    advanceAreaChipEl = document.getElementById('advanceAreaChip');
+    if (area) {
+      advanceAreaChipEl.textContent = area;
+      advanceAreaChipEl.style.display = '';
+    } else {
+      advanceAreaChipEl.style.display = 'none';
+    }
+
+    advanceDateTextEl.textContent = item.date || '';
+    advanceMetaLineEl.textContent = (advIndex + 1) + ' / ' + advances.length + '  ·  ' + (advanceLocked ? t('locked') : t('unlocked'));
+
+    btnAdvPrev.disabled = advIndex <= 0;
+    btnAdvNext.disabled = advIndex >= advances.length - 1;
+  }
+
+  function swapSwappableLayers(snapshot) {
+    layerFiles.filter(function(li){ return li.swappable; }).forEach(function(li){
+      var current = mainLayers[li.name];
+      if (current && map.hasLayer(current)) map.removeLayer(current);
+      var data = null;
+      if (snapshot) data = snapshot[li.layerKey] || snapshot[li.name] || null;
+      if (data) {
+        var layer = makeGeoLayer(li, data);
+        layer._layerInfo = li;
+        layer.addTo(map);
+        mainLayers[li.name] = layer;
+      } else {
+        delete mainLayers[li.name];
+      }
+    });
+    updateSidebarLayerControl();
+    if (is3DActive) updateOverlayImage();
+  }
+
+  function restoreLiveLayers() {
+    layerFiles.filter(function(li){ return li.swappable; }).forEach(function(li){
+      var url = (li.liveRoot || '') + li.file;
+      fetchGeoJSON(url).then(function(data){
+        var current = mainLayers[li.name];
+        if (current && map.hasLayer(current)) map.removeLayer(current);
+        var layer = makeGeoLayer(li, data);
+        layer._layerInfo = li;
+        layer.addTo(map);
+        mainLayers[li.name] = layer;
+        updateSidebarLayerControl();
+        if (is3DActive) updateOverlayImage();
+      }).catch(function(err){
+        console.warn('Could not restore live ' + li.file + ':', err);
+      });
+    });
+  }
+
+  function flyToFocus(focus) {
+    if (!focus) return;
+    if (Number.isFinite(Number(focus.south)) &&
+        Number.isFinite(Number(focus.west)) &&
+        Number.isFinite(Number(focus.north)) &&
+        Number.isFinite(Number(focus.east))) {
+      var bounds = L.latLngBounds([
+        [Number(focus.south), Number(focus.west)],
+        [Number(focus.north), Number(focus.east)]
+      ]);
+      map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 14, duration: 0.9 });
+      return;
+    }
+    if (Number.isFinite(Number(focus.lat)) && Number.isFinite(Number(focus.lng))) {
+      var z = Number.isFinite(Number(focus.zoom)) ? Number(focus.zoom) : map.getZoom();
+      map.flyTo([Number(focus.lat), Number(focus.lng)], z, { duration: 0.9 });
+    }
+  }
+
+  function applyAdvanceState() {
+    var item = advances[advIndex];
+    if (!item) { renderAdvance(); return; }
+
+    renderAdvance();
+
+    if (!advanceLocked) flyToFocus(item.focus);
+
+    if (item.snapshot) {
+      var snapUrl = LIVE_ROOT + item.snapshot;
+      fetchGeoJSON(snapUrl).then(function(snap){
+        swapSwappableLayers(snap);
+      }).catch(function(err){
+        console.warn('Could not load advance snapshot:', err);
+      });
+    } else {
+      swapSwappableLayers(null);
+    }
+  }
+
+  btnAdvPrev.addEventListener('click', function(){
+    if (advIndex > 0) { advIndex--; applyAdvanceState(); }
+  });
+  btnAdvNext.addEventListener('click', function(){
+    if (advIndex < advances.length - 1) { advIndex++; applyAdvanceState(); }
+  });
+
+  (function loadAdvances(){
+    fetchGeoJSON(ADVANCES_URL).then(function(list){
+      if (!Array.isArray(list) || !list.length) {
+        advances = [];
+        advIndex = -1;
+        renderAdvance();
+        return;
+      }
+      advances = list.slice();
+      advances.sort(function(a, b){
+        var ak = String(a.date || '') + 'T' + String(a.time || '00:00:00');
+        var bk = String(b.date || '') + 'T' + String(b.time || '00:00:00');
+        return ak.localeCompare(bk);
+      });
+      advIndex = advances.length - 1;
+      renderAdvance();
+      // Focus on the latest advance on first load (option b)
+      var latest = advances[advIndex];
+      if (latest && latest.focus) flyToFocus(latest.focus);
+    }).catch(function(err){
+      console.warn('Could not load advances.json:', err);
+    });
+  })();
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  /* ===================== FLOATING PANELS ===================== */
   function closeAllPanels(except) {
     document.querySelectorAll('.floating-panel').forEach(function(p){
       if (p !== except) p.classList.remove('open');
@@ -1603,7 +2007,7 @@
     makePanelDraggable(document.getElementById(id));
   });
 
-  /* --- Ruler --- */
+  /* ===================== RULER ===================== */
   var rulerPoints = [];
   var rulerClosed = false;
   var rulerRedoPoints = [];
@@ -1686,7 +2090,7 @@
   map.on('click', function(e){ if (activeTool === 'ruler') rulerAddPoint(e.latlng); });
   map.on('dblclick', function(e){ if (activeTool === 'ruler') { L.DomEvent.preventDefault(e.originalEvent); redrawRuler(); } });
 
-  /* --- Search (Polrad style: standard Leaflet marker) --- */
+  /* ===================== SEARCH ===================== */
   var searchInput = document.getElementById('searchInput');
   var searchResultsEl = document.getElementById('searchResults');
   var searchMarker = null;
@@ -1702,11 +2106,6 @@
   }
   function clearSearchMarker() {
     if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
-  }
-  function escapeHtml(s) {
-    return (s || '').replace(/[&<>"']/g, function(c){
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-    });
   }
   function showSearchLocation(lat, lng, label) {
     map.setView([lat, lng], Math.max(map.getZoom(), 10));
@@ -1781,7 +2180,7 @@
     if (!e.target.closest('#searchBox')) searchResultsEl.style.display = 'none';
   });
 
-  /* --- Draw tools --- */
+  /* ===================== DRAW TOOLS ===================== */
   var activeTool = null;
   var currentColor = '#ff0000';
   var currentThickness = 3;
@@ -1839,24 +2238,9 @@
   function updateInstructions() {
     var drawMsg = document.getElementById('draw-result');
     var coordsMsg = document.getElementById('coords-result');
-    var msgs = {
-      polygon: "Click points to trace a shape, then click 'Finish shape'.",
-      freehand: "Click and drag on the map to draw freely.",
-      'freehand-arrow': "Click and drag to draw a line. An arrowhead will be added at the tip when you release.",
-      'dashed-freehand': "Click and drag on the map to draw a dashed line freely.",
-      'dashed-freehand-arrow': "Click and drag to draw a dashed line. An arrowhead will be added at the tip when you release.",
-      line: "Click points to draw a line, then click 'Finish shape'.",
-      'dashed-line': "Click points to draw a dashed line, then click 'Finish shape'.",
-      arrow: "Click start point, then click end point to place an arrow.",
-      'dashed-arrow': "Click start point, then click end point to place a dashed arrow.",
-      rectangle: "Click one corner, then click opposite corner.",
-      'flag-ua': "Click anywhere on the map to drop a Ukraine flag marker.",
-      'flag-ru': "Click anywhere on the map to drop a Russia flag marker.",
-      eraser: "Click on any drawn shape or line to erase it (arrows erase as a whole).",
-      coords: "Click anywhere on the map to display its precise coordinates."
-    };
-    if (activeTool === 'coords') coordsMsg.innerText = msgs.coords;
-    else drawMsg.innerText = activeTool ? (msgs[activeTool] || '') : 'Select a shape to draw.';
+    if (activeTool === 'coords') coordsMsg.innerText = ti('coords');
+    else if (activeTool) drawMsg.innerText = ti(activeTool) || '';
+    else drawMsg.innerText = t('selectShape');
   }
 
   map.on('mousedown', function(e){
@@ -2061,9 +2445,12 @@
   function clearDrawings() {
     userDrawings.clearLayers();
     resetDrawingState();
-    document.getElementById('draw-result').innerText = 'Select a shape to draw.';
+    document.getElementById('draw-result').innerText = t('selectShape');
     if (is3DActive) updateOverlayImage();
   }
+
+  /* ===================== BOOT ===================== */
+  applyLanguage();
 
 </script>
 
