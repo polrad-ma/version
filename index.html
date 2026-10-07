@@ -358,6 +358,74 @@
       margin:0 0 8px;
     }
 
+    /* ===================== SITUATION (summary section) ===================== */
+    #summaryPanel{
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+    }
+    #summaryPanel .summary-title{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:var(--sub);
+      margin:0 0 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    #summaryPanel .summary-title .info-icon{
+      width:14px;height:14px;border-radius:50%;
+      border:1px solid var(--border);
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:9px;color:var(--sub);
+      cursor:help;
+    }
+    .summary-grid{
+      display:flex;
+      gap:8px;
+      align-items:stretch;
+    }
+    .summary-col{
+      flex:1;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .summary-col-label{
+      font-size:9.5px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:var(--sub);
+      font-weight:600;
+    }
+    .summary-chip{
+      font-size:14px;
+      font-weight:700;
+      padding:7px 10px;
+      border-radius:6px;
+      text-align:center;
+      white-space:nowrap;
+      letter-spacing:.01em;
+      transition:background .15s,border-color .15s,color .15s;
+      min-height:34px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .summary-chip.red{ background:#e0526a22; color:#e0526a; border:1px solid #e0526a; }
+    .summary-chip.blue{ background:#3254ad33; color:#5a82f0; border:1px solid #3254ad; }
+    .summary-chip.neutral{ background:var(--panel2); color:var(--sub); border:1px solid var(--border); font-weight:500; font-size:12px; }
+    .summary-updated{
+      margin-top:8px;
+      font-size:11px;
+      color:var(--sub);
+      display:flex;
+      align-items:center;
+      gap:5px;
+    }
+    .summary-updated svg{ opacity:.7; flex-shrink:0; }
+
     .credit-block{
       display:flex;flex-direction:column;gap:6px;align-items:flex-end;
       padding:12px 14px;margin-top:auto;border-top:1px solid var(--border);
@@ -620,6 +688,28 @@
       <div id="advanceMetaLine">—</div>
     </div>
 
+    <div id="summaryPanel">
+      <div class="summary-title">
+        <span data-i18n="situationTitle">Situation</span>
+        <span class="info-icon" title="Net area change — positive from Russian advances counts red, positive from Ukrainian advances counts blue. When both happened, they cancel out.">i</span>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-col">
+          <div class="summary-col-label" data-i18n="summaryLastDay">Last day</div>
+          <div class="summary-chip neutral" id="summaryLastDayChip">—</div>
+        </div>
+        <div class="summary-col">
+          <div class="summary-col-label" data-i18n="summaryMonthStart">Since month start</div>
+          <div class="summary-chip neutral" id="summaryMonthChip">—</div>
+        </div>
+      </div>
+      <div class="summary-updated" id="summaryUpdatedLine">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+        <span data-i18n="summaryUpdated">Updated</span>
+        <span id="summaryUpdatedDate">—</span>
+      </div>
+    </div>
+
     <div class="credit-block">
       <a href="https://x.com/polrad_mapping_" target="_blank" rel="noopener">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-7l-5.5-6.9L4.2 22H1l8.1-9.3L1 2h7.2l5 6.3L18.9 2zm-1.2 18h1.7L6.4 4H4.6l13.1 16z"/></svg>
@@ -762,6 +852,11 @@
       advanceNextTitle: "Next advance",
       advanceLockTitle: "Lock map position while navigating advances",
       advanceUnlockTitle: "Unlock — clicking again will let the map move freely",
+      situationTitle: "Situation",
+      summaryLastDay: "Last day",
+      summaryMonthStart: "Since month start",
+      summaryUpdated: "Updated",
+      noEdits: "no edits",
       instructions: {
         polygon: "Click points to trace a shape, then click 'Finish shape'.",
         freehand: "Click and drag on the map to draw freely.",
@@ -780,9 +875,10 @@
       },
       layerNames: {
         russia: "Russian-controlled territory",
+        ua_territory: "Ukrainian-controlled territory",
         grayzone: "Gray zone",
-        forts: "Fortifications (Simple, PMapping832)",
-        towns: "Town borders (PWM)"
+        towns: "Town borders (PWM)",
+        forts: "Fortifications (Simple, PMapping832)"
       },
       locked: "Locked", unlocked: "Unlocked"
     },
@@ -838,6 +934,11 @@
       advanceNextTitle: "Следующее продвижение",
       advanceLockTitle: "Заблокировать положение карты при навигации по продвижениям",
       advanceUnlockTitle: "Разблокировать — повторное нажатие позволит свободно двигать карту",
+      situationTitle: "Обстановка",
+      summaryLastDay: "Последний день",
+      summaryMonthStart: "С начала месяца",
+      summaryUpdated: "Обновлено",
+      noEdits: "нет изменений",
       instructions: {
         polygon: "Нажимайте точки, чтобы обвести фигуру, затем нажмите «Завершить фигуру».",
         freehand: "Зажмите кнопку мыши и рисуйте свободно.",
@@ -856,9 +957,10 @@
       },
       layerNames: {
         russia: "Территория под контролем России",
+        ua_territory: "Территория под контролем Украины",
         grayzone: "Серая зона",
-        forts: "Укрепления (Simple, PMapping832)",
-        towns: "Границы городов (PWM)"
+        towns: "Границы городов (PWM)",
+        forts: "Укрепления (Simple, PMapping832)"
       },
       locked: "Заблокировано", unlocked: "Разблокировано"
     }
@@ -894,6 +996,7 @@
     updateSidebarLayerControl();
     updateInstructions();
     if (advIndex >= 0) renderAdvance();
+    renderSummary();
   }
   function setLanguage(lang) {
     currentLang = (lang === 'ru') ? 'ru' : 'en';
@@ -946,6 +1049,7 @@
 
   map.createPane('terrainPane');   map.getPane('terrainPane').style.zIndex = 400;
   map.createPane('territoryPane'); map.getPane('territoryPane').style.zIndex = 420;
+  map.createPane('uaTerritoryPane'); map.getPane('uaTerritoryPane').style.zIndex = 440;
   map.createPane('grayZonePane');  map.getPane('grayZonePane').style.zIndex = 460;
   map.createPane('fortsPane');     map.getPane('fortsPane').style.zIndex = 480;
   map.createPane('townsPane');     map.getPane('townsPane').style.zIndex = 490;
@@ -1408,7 +1512,6 @@
 
   /* ===================== LAYERS ===================== */
   var mainLayers = {};
-  var extraLayers = {};
 
   var layerFiles = [
     {
@@ -1418,10 +1521,22 @@
       liveRoot: LIVE_ROOT,
       color: '#a52714',
       outlineColor: '#ff0000',
-      group: 'main',
       noOutline: false,
       smoothFactor: 2.0,
       pane: 'territoryPane',
+      swappable: true
+    },
+    {
+      file: 'ua_territory.geojson',
+      layerKey: 'ua_territory',
+      name: 'ua_territory',
+      liveRoot: LIVE_ROOT,
+      color: '#1a237e',
+      outlineColor: '#3949ab',
+      noOutline: false,
+      smoothFactor: 2.0,
+      pane: 'uaTerritoryPane',
+      optional: true,
       swappable: true
     },
     {
@@ -1431,25 +1546,10 @@
       liveRoot: LIVE_ROOT,
       color: '#c3c3c3',
       outlineColor: '#b4b4b4',
-      group: 'main',
       noOutline: false,
       smoothFactor: 2.0,
       pane: 'grayZonePane',
       swappable: true
-    },
-    {
-      file: 'forts.geojson',
-      layerKey: 'forts',
-      name: 'forts',
-      color: '#00ffff',
-      outlineColor: '#00ffff',
-      group: 'main',
-      noOutline: false,
-      fillOpacity: 0,
-      defaultOff: true,
-      smoothFactor: 1.3,
-      pane: 'fortsPane',
-      weight: 1.8
     },
     {
       file: 'towns.geojson',
@@ -1457,13 +1557,25 @@
       name: 'towns',
       color: '#ffffff',
       outlineColor: '#ffffff',
-      group: 'extra',
       noOutline: false,
       fillOpacity: 0,
       defaultOff: true,
       smoothFactor: 2.2,
       pane: 'townsPane',
       weight: 1.2
+    },
+    {
+      file: 'forts.geojson',
+      layerKey: 'forts',
+      name: 'forts',
+      color: '#00ffff',
+      outlineColor: '#00ffff',
+      noOutline: false,
+      fillOpacity: 0,
+      defaultOff: true,
+      smoothFactor: 1.3,
+      pane: 'fortsPane',
+      weight: 1.8
     }
   ];
 
@@ -1520,12 +1632,17 @@
       .then(function(data){
         var layer = makeGeoLayer(layerInfo, data);
         layer._layerInfo = layerInfo;
-        if (layerInfo.group === 'main') mainLayers[layerInfo.name] = layer;
-        else extraLayers[layerInfo.name] = layer;
+        mainLayers[layerInfo.name] = layer;
         if (!layerInfo.defaultOff) layer.addTo(map);
         updateSidebarLayerControl();
       })
-      .catch(function(err){ console.warn('Layer load error (' + layerInfo.file + '):', err); });
+      .catch(function(err){
+        if (layerInfo.optional) {
+          // Silently skip optional layers whose file doesn't exist yet.
+          return;
+        }
+        console.warn('Layer load error (' + layerInfo.file + '):', err);
+      });
   });
 
   function updateSidebarLayerControl() {
@@ -1533,7 +1650,9 @@
     if (!container) return;
     container.innerHTML = '';
 
-    function makeRow(name, layer) {
+    // Flat list — order matches layerFiles array.
+    Object.keys(mainLayers).forEach(function(name){
+      var layer = mainLayers[name];
       var row = document.createElement('div');
       row.className = 'overlay-row';
 
@@ -1553,22 +1672,20 @@
 
       row.appendChild(cb);
       row.appendChild(lbl);
-      return row;
-    }
-
-    Object.keys(mainLayers).forEach(function(name){
-      container.appendChild(makeRow(name, mainLayers[name]));
+      container.appendChild(row);
     });
 
-    var extraKeys = Object.keys(extraLayers);
-    if (extraKeys.length) {
-      var heading = document.createElement('h3');
-      heading.style.marginTop = '10px';
-      heading.textContent = currentLang === 'ru' ? 'Дополнительно' : 'Extra';
-      container.appendChild(heading);
-      extraKeys.forEach(function(name){
-        container.appendChild(makeRow(name, extraLayers[name]));
-      });
+    // "My Drawings" appended at the bottom — not a togglable layer, just a
+    // note that the user's local sketches sit on top of everything else.
+    if (userDrawings && userDrawings.getLayers().length) {
+      var row = document.createElement('div');
+      row.className = 'overlay-row';
+      var lbl = document.createElement('label');
+      lbl.style.paddingLeft = '22px';
+      lbl.style.color = 'var(--sub)';
+      lbl.textContent = 'My Drawings';
+      row.appendChild(lbl);
+      container.appendChild(row);
     }
   }
 
@@ -1758,7 +1875,7 @@
     if (is3DActive) updateOverlayImage();
   });
 
-  /* ===================== ADVANCES ===================== */
+  /* ===================== ADVANCES + SUMMARY ===================== */
   var ADVANCES_URL = LIVE_ROOT + 'advances.json';
   var advances = [];
   var advIndex = -1;
@@ -1771,6 +1888,10 @@
   var btnAdvPrev = document.getElementById('btnAdvPrev');
   var btnAdvNext = document.getElementById('btnAdvNext');
   var advanceLockBtn = document.getElementById('advanceLockBtn');
+
+  var summaryLastDayChip = document.getElementById('summaryLastDayChip');
+  var summaryMonthChip = document.getElementById('summaryMonthChip');
+  var summaryUpdatedDate = document.getElementById('summaryUpdatedDate');
 
   function advanceAreaDisplay(item) { return item ? (item.areaDisplay || '') : ''; }
   function advanceAreaColor(item) {
@@ -1833,6 +1954,74 @@
     btnAdvNext.disabled = advIndex >= advances.length - 1;
   }
 
+  // ---- Situation summary ----
+  // Sum signed areaChange per side, then net = ru - ua.
+  // Positive net -> Russian gained, negative net -> Ukrainian gained.
+  function netOfEntries(entries) {
+    var ruNet = 0, uaNet = 0;
+    entries.forEach(function(item){
+      var v = Number(item.areaChange) || 0;
+      if (item.side === 'ru') ruNet += v;
+      else if (item.side === 'ua') uaNet += v;
+    });
+    return { ru: ruNet, ua: uaNet, net: ruNet - uaNet, count: entries.length };
+  }
+
+  function chipClassForNet(net) {
+    if (net > 0.005) return 'red';
+    if (net < -0.005) return 'blue';
+    return 'neutral';
+  }
+  function chipTextForNet(result) {
+    if (result.count === 0) return t('noEdits');
+    var n = result.net;
+    if (Math.abs(n) < 0.005) return '0.00 km²';
+    return '+' + Math.abs(n).toFixed(2) + ' km²';
+  }
+  function formatDateDMY(iso) {
+    if (!iso || typeof iso !== 'string') return '—';
+    var parts = iso.split('-');
+    if (parts.length !== 3) return iso;
+    return parts[2] + '.' + parts[1] + '.' + parts[0];
+  }
+
+  function renderSummary() {
+    if (!summaryLastDayChip || !summaryMonthChip || !summaryUpdatedDate) return;
+
+    if (!advances.length) {
+      summaryLastDayChip.className = 'summary-chip neutral';
+      summaryLastDayChip.textContent = t('noEdits');
+      summaryMonthChip.className = 'summary-chip neutral';
+      summaryMonthChip.textContent = t('noEdits');
+      summaryUpdatedDate.textContent = '—';
+      return;
+    }
+
+    // Most recent date across all advances.
+    var newestDate = advances[advances.length - 1].date;
+    if (!newestDate) {
+      summaryUpdatedDate.textContent = '—';
+      return;
+    }
+    var monthPrefix = newestDate.slice(0, 7); // "YYYY-MM"
+
+    var lastDayEntries = advances.filter(function(a){ return a.date === newestDate; });
+    var monthEntries = advances.filter(function(a){
+      return a.date >= monthPrefix + '-01' && a.date <= newestDate;
+    });
+
+    var lastDayResult = netOfEntries(lastDayEntries);
+    var monthResult = netOfEntries(monthEntries);
+
+    summaryLastDayChip.className = 'summary-chip ' + chipClassForNet(lastDayResult.net);
+    summaryLastDayChip.textContent = chipTextForNet(lastDayResult);
+
+    summaryMonthChip.className = 'summary-chip ' + chipClassForNet(monthResult.net);
+    summaryMonthChip.textContent = chipTextForNet(monthResult);
+
+    summaryUpdatedDate.textContent = formatDateDMY(newestDate);
+  }
+
   function swapSwappableLayers(snapshot) {
     layerFiles.filter(function(li){ return li.swappable; }).forEach(function(li){
       var current = mainLayers[li.name];
@@ -1850,24 +2039,6 @@
     });
     updateSidebarLayerControl();
     if (is3DActive) updateOverlayImage();
-  }
-
-  function restoreLiveLayers() {
-    layerFiles.filter(function(li){ return li.swappable; }).forEach(function(li){
-      var url = (li.liveRoot || '') + li.file;
-      fetchGeoJSON(url).then(function(data){
-        var current = mainLayers[li.name];
-        if (current && map.hasLayer(current)) map.removeLayer(current);
-        var layer = makeGeoLayer(li, data);
-        layer._layerInfo = li;
-        layer.addTo(map);
-        mainLayers[li.name] = layer;
-        updateSidebarLayerControl();
-        if (is3DActive) updateOverlayImage();
-      }).catch(function(err){
-        console.warn('Could not restore live ' + li.file + ':', err);
-      });
-    });
   }
 
   function flyToFocus(focus) {
@@ -1922,6 +2093,7 @@
         advances = [];
         advIndex = -1;
         renderAdvance();
+        renderSummary();
         return;
       }
       advances = list.slice();
@@ -1932,11 +2104,12 @@
       });
       advIndex = advances.length - 1;
       renderAdvance();
-      // Focus on the latest advance on first load (option b)
+      renderSummary();
       var latest = advances[advIndex];
       if (latest && latest.focus) flyToFocus(latest.focus);
     }).catch(function(err){
       console.warn('Could not load advances.json:', err);
+      renderSummary();
     });
   })();
 
@@ -2189,7 +2362,6 @@
   var isMouseDown = false;
 
   var userDrawings = L.layerGroup().addTo(map);
-  extraLayers['My Drawings'] = userDrawings;
 
   function attachEraser(layer, owningGroup) {
     layer.on('click', function(e){
@@ -2295,6 +2467,7 @@
     }
     if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
     drawingPoints = [];
+    updateSidebarLayerControl();
     if (is3DActive) updateOverlayImage();
   });
 
@@ -2346,6 +2519,7 @@
         userDrawings.addLayer(rect);
         if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
         drawingPoints = [];
+        updateSidebarLayerControl();
         if (is3DActive) updateOverlayImage();
       }
       return;
@@ -2356,6 +2530,7 @@
       var flagMarker = L.marker(e.latlng, { icon: flagIcon }).bindPopup(flagLabel);
       attachEraser(flagMarker);
       userDrawings.addLayer(flagMarker);
+      updateSidebarLayerControl();
       return;
     }
     if (activeTool === 'arrow' || activeTool === 'dashed-arrow') {
@@ -2365,6 +2540,7 @@
         addArrow(drawingPoints[0], e.latlng, currentColor, currentThickness, activeTool === 'dashed-arrow');
         if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
         drawingPoints = [];
+        updateSidebarLayerControl();
         if (is3DActive) updateOverlayImage();
       }
     }
@@ -2440,12 +2616,14 @@
       userDrawings.addLayer(line);
     }
     resetDrawingState();
+    updateSidebarLayerControl();
     if (is3DActive) updateOverlayImage();
   }
   function clearDrawings() {
     userDrawings.clearLayers();
     resetDrawingState();
     document.getElementById('draw-result').innerText = t('selectShape');
+    updateSidebarLayerControl();
     if (is3DActive) updateOverlayImage();
   }
 
