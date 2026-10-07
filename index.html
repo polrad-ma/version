@@ -7,10 +7,12 @@
   <meta charset="utf-8">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://server.arcgisonline.com">
+  <link rel="preconnect" href="https://s3.amazonaws.com">
 
   <script>
     (function() {
@@ -37,6 +39,7 @@
   </script>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 
   <style>
     :root{
@@ -62,13 +65,16 @@
       position:absolute;inset:0;z-index:0;background:var(--bg);
       -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
     }
+    #map3d{position:absolute;inset:0;z-index:1;display:none;background:#0a0e14;}
+    #map3d.active{display:block;}
+    #map3d canvas{cursor:grab;}
     #mapWrap > .leaflet-control-container{z-index:2;}
 
     #crosshair{position:absolute;top:50%;left:50%;width:0;height:0;z-index:2;display:none;pointer-events:none;}
     #crosshair.active{display:block;}
     .ch-line{position:absolute;background:var(--text);opacity:.6;box-shadow:0 0 2px #0008;}
     .ch-h{width:30px;height:1.5px;top:0;left:-15px;}
-    .ch-v{width:1.5px;height:30px;top:-15px;left:0;}
+    .ch-v{width:1.5px;height:30px;top:0;left:0;}
     .ch-hotspot{
       position:absolute;top:-20px;left:-20px;width:40px;height:40px;border-radius:50%;
       pointer-events:auto;cursor:pointer;background:transparent;transition:background .12s;
@@ -88,11 +94,6 @@
     .sidebar-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);}
     .sidebar-header h1{font-size:14.5px;margin:0 0 2px;font-weight:700;letter-spacing:.01em;}
     .sidebar-header p{font-size:11px;color:var(--sub);margin:0;}
-    .view-only-badge{
-      display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:2px 9px;border-radius:10px;
-      background:var(--accent-soft);color:#7d97e0;border:1px solid var(--accent);font-size:10.5px;font-weight:600;
-    }
-    :root[data-theme="light"] .view-only-badge{color:var(--accent);}
 
     .toolbar{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px;}
 
@@ -114,74 +115,40 @@
     .overlay-row .swatch{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
     .overlay-row label{flex:1;cursor:pointer;}
     .overlay-row input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
+    .overlay-sub{padding-left:18px;margin-bottom:8px;}
+    .overlay-sub select{
+      background:var(--panel3);color:var(--text);border:1px solid var(--border);
+      border-radius:4px;font-size:11px;padding:4px 6px;font-family:inherit;width:100%;cursor:pointer;
+    }
 
-    /* Snapshot section — now inside the sidebar, below Layers. */
     .snapshot-section{padding:10px 12px;border-bottom:1px solid var(--border);}
     #snapshotDescBox{
-      background:#1a1f2b;
-      border:2px solid #2d5aed;
-      border-radius:10px;
-      padding:14px 16px;
-      min-height:120px;
-      color:#6b8cff;
-      font-family:ui-monospace,Consolas,monospace;
-      font-size:15px;
-      line-height:1.45;
-      white-space:pre-wrap;
-      word-wrap:break-word;
-      overflow-wrap:break-word;
+      background:#1a1f2b;border:2px solid #2d5aed;border-radius:10px;padding:14px 16px;
+      min-height:120px;color:#6b8cff;font-family:ui-monospace,Consolas,monospace;
+      font-size:15px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;
     }
-    :root[data-theme="light"] #snapshotDescBox{
-      background:#eef3ff;
-      color:#2d5aed;
-    }
-    #snapshotDescBox .snapshot-placeholder{ color:#6b8cff; opacity:.85; }
-    :root[data-theme="light"] #snapshotDescBox .snapshot-placeholder{ color:#2d5aed; }
-    #snapshotDescBox .snapshot-meta{
-      display:block; color:#8ba7ff; font-size:11px; margin-top:8px; opacity:.7;
-    }
-    :root[data-theme="light"] #snapshotDescBox .snapshot-meta{ color:#4a72c9; }
+    :root[data-theme="light"] #snapshotDescBox{background:#eef3ff;color:#2d5aed;}
+    #snapshotDescBox .snapshot-placeholder{color:#6b8cff;opacity:.85;}
+    :root[data-theme="light"] #snapshotDescBox .snapshot-placeholder{color:#2d5aed;}
+    #snapshotDescBox .snapshot-meta{display:block;color:#8ba7ff;font-size:11px;margin-top:8px;opacity:.7;}
+    :root[data-theme="light"] #snapshotDescBox .snapshot-meta{color:#4a72c9;}
 
-    #snapshotNavRow{ display:flex; gap:10px; align-items:stretch; margin-top:8px; }
+    #snapshotNavRow{display:flex;gap:10px;align-items:stretch;margin-top:8px;}
     .snapshot-nav-btn{
-      flex:1;
-      background:transparent;
-      border:2px solid #2d5aed;
-      border-radius:8px;
-      padding:8px 0;
-      display:flex; align-items:center; justify-content:center;
-      color:#2d5aed;
-      font-size:26px; line-height:1;
-      cursor:pointer;
-      transition:background .12s,border-color .12s,color .12s;
-      min-height:44px;
+      flex:1;background:transparent;border:2px solid #2d5aed;border-radius:8px;padding:8px 0;
+      display:flex;align-items:center;justify-content:center;color:#2d5aed;font-size:26px;line-height:1;
+      cursor:pointer;transition:background .12s,border-color .12s,color .12s;min-height:44px;
     }
-    .snapshot-nav-btn:hover{ background:#2d5aed22; border-color:#3f6fff; color:#3f6fff; }
-    .snapshot-nav-btn svg{ width:26px; height:26px; }
-
+    .snapshot-nav-btn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
+    .snapshot-nav-btn svg{width:26px;height:26px;}
     #snapshotLockBtn{
-      width:48px;
-      background:transparent;
-      border:2px solid #2d5aed;
-      border-radius:8px;
-      padding:0;
-      display:flex; align-items:center; justify-content:center;
-      color:#2d5aed;
-      font-size:20px;
-      cursor:pointer;
-      transition:background .12s,border-color .12s,color .12s;
-      min-height:44px;
+      width:48px;background:transparent;border:2px solid #2d5aed;border-radius:8px;padding:0;
+      display:flex;align-items:center;justify-content:center;color:#2d5aed;font-size:20px;
+      cursor:pointer;transition:background .12s,border-color .12s,color .12s;min-height:44px;
     }
-    #snapshotLockBtn:hover{ background:#2d5aed22; border-color:#3f6fff; color:#3f6fff; }
-    #snapshotLockBtn svg{ width:20px; height:20px; }
-
-    #snapshotMeta{
-      font-size:10.5px;
-      color:var(--sub);
-      text-align:center;
-      letter-spacing:.02em;
-      margin-top:6px;
-    }
+    #snapshotLockBtn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
+    #snapshotLockBtn svg{width:20px;height:20px;}
+    #snapshotMeta{font-size:10.5px;color:var(--sub);text-align:center;letter-spacing:.02em;margin-top:6px;}
 
     .credit-block{
       display:flex;flex-direction:column;gap:6px;align-items:flex-end;
@@ -306,6 +273,12 @@
     .leaflet-popup.polygon-edit-popup .leaflet-popup-tip{background:var(--panel);}
     .leaflet-popup.polygon-edit-popup .leaflet-popup-close-button{color:var(--sub) !important;}
 
+    .legend-control{
+      background:var(--panel);border:1px solid var(--border);border-radius:8px;
+      box-shadow:0 2px 8px #0006;padding:9px 11px;font-size:11px;min-width:170px;display:none;
+    }
+    .legend-control .legend-title{font-weight:600;color:var(--text);margin-bottom:6px;}
+
     .coord-popup{font-size:12px;min-width:190px;padding-right:14px;}
     .coord-popup .cp-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
     .coord-popup .cp-label{width:52px;color:var(--sub);font-size:10.5px;}
@@ -352,6 +325,7 @@
 
   <div id="mapWrap">
     <div id="map"></div>
+    <div id="map3d"></div>
     <div id="crosshair">
       <div class="ch-line ch-h"></div>
       <div class="ch-line ch-v"></div>
@@ -364,10 +338,6 @@
     <div class="sidebar-header">
       <h1>Russo-Ukrainian War Map</h1>
       <p>Polrad Mapping · sandbox</p>
-      <span class="view-only-badge">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-        VIEW ONLY
-      </span>
     </div>
 
     <div class="toolbar">
@@ -390,7 +360,21 @@
       <div id="grouped-layer-container"></div>
     </div>
 
-    <!-- Snapshot section — design only, no function yet -->
+    <div class="overlay-section">
+      <h3>Terrain</h3>
+      <div class="overlay-row">
+        <input type="checkbox" id="chkTerrain">
+        <label for="chkTerrain">Elevation overlay</label>
+      </div>
+      <div class="overlay-sub" id="terrainOpts" style="display:none;">
+        <select id="terrainMode">
+          <option value="color">Color (hypsometric)</option>
+          <option value="bw">Black &amp; white</option>
+          <option value="black-transparent">Black, transparent</option>
+        </select>
+      </div>
+    </div>
+
     <div class="snapshot-section">
       <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);margin:0 0 8px;">Snapshots</h3>
       <div id="snapshotDescBox">
@@ -535,7 +519,6 @@
     preferCanvas: true,
     layers: [baseLayers[currentBasemapKey].layer]
   });
-  document.getElementById('mapWrap').appendChild(map._controlContainer);
 
   var scaleControl = L.control.scale({
     position: 'bottomleft', metric: true, imperial: true, maxWidth: 150
@@ -545,6 +528,8 @@
   map.getPane('territoryPane').style.zIndex = 420;
   map.createPane('grayZonePane');
   map.getPane('grayZonePane').style.zIndex = 460;
+  map.createPane('terrainPane');
+  map.getPane('terrainPane').style.zIndex = 500;
   map.createPane('drawingsPane');
   map.getPane('drawingsPane').style.zIndex = 650;
   map.createPane('markersPane');
@@ -628,6 +613,7 @@
     openCoordPopupAt(map.getCenter());
   });
 
+  /* --- Control stack --- */
   var SidebarToggleControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -646,6 +632,224 @@
     }
   });
   map.addControl(new SidebarToggleControl());
+
+  // 3D toggle — swaps between the Leaflet 2D map and the MapLibre 3D map.
+  var is3DActive = false;
+  var map3DGL = null, map3DReady = false, pendingShow3D = false, overlaySyncArmed = false;
+  var map3DContainerEl = document.getElementById('map3d');
+  var toggle3DBtnEl = null;
+
+  var Toggle3DControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.textContent = '3D';
+      btn.style.fontSize = '10.5px';
+      btn.style.fontWeight = '700';
+      btn.title = '3D view — drag to pan, scroll to zoom';
+      toggle3DBtnEl = btn;
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){ toggle3DView(!is3DActive); });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
+  });
+  map.addControl(new Toggle3DControl());
+
+  // Reparent Leaflet's control container into #mapWrap so its controls stay
+  // above the MapLibre canvas when 3D turns on.
+  document.getElementById('mapWrap').appendChild(map._controlContainer);
+
+  /* --- AWS Terrarium: despeckling protocol for MapLibre ---
+     The free public Terrarium dataset has occasional corrupted single-pixel
+     spikes. Each decoded pixel is compared to the median of its 8 neighbors;
+     outliers (outside a sanity range, or >30m from their neighbors) are
+     replaced with that median before MapLibre ever sees the tile. Tiles are
+     cached in memory for the session. */
+  var TERRAIN_GLOBAL_MIN = -100, TERRAIN_GLOBAL_MAX = 600, TERRAIN_LOCAL_DEVIATION = 30;
+  var terrainTileCache = new Map();
+  maplibregl.addProtocol('ukwarmap-terrain', async function(params) {
+    var cached = terrainTileCache.get(params.url);
+    if (cached) return { data: cached };
+    var realUrl = params.url.replace('ukwarmap-terrain://', 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/') + '.png';
+    var response = await fetch(realUrl);
+    if (!response.ok) throw new Error('terrain tile fetch failed: ' + response.status);
+    var blob = await response.blob();
+    var bitmap = await createImageBitmap(blob);
+    var w = bitmap.width, h = bitmap.height;
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0);
+    var imgData = ctx.getImageData(0, 0, w, h);
+    var d = imgData.data;
+    var elev = new Float32Array(w * h);
+    for (var p = 0; p < w * h; p++) {
+      var i = p * 4;
+      elev[p] = (d[i] * 256 + d[i + 1] + d[i + 2] / 256) - 32768;
+    }
+    var neighborBuf = new Float32Array(8);
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var idx = y * w + x;
+        var n = 0;
+        for (var dy = -1; dy <= 1; dy++) {
+          for (var dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            var nx = x + dx, ny = y + dy;
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+            neighborBuf[n++] = elev[ny * w + nx];
+          }
+        }
+        var view = neighborBuf.subarray(0, n);
+        view.sort();
+        var median = view[Math.floor(n / 2)];
+        var self = elev[idx];
+        var globallyBad = self < TERRAIN_GLOBAL_MIN || self > TERRAIN_GLOBAL_MAX;
+        var locallyBad = Math.abs(self - median) > TERRAIN_LOCAL_DEVIATION;
+        if (globallyBad || locallyBad) {
+          var ii = idx * 4;
+          var v = Math.round(median) + 32768;
+          d[ii] = Math.floor(v / 256);
+          d[ii + 1] = v % 256;
+          d[ii + 2] = 0;
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+    var outBlob = await new Promise(function(resolve){ canvas.toBlob(resolve, 'image/png'); });
+    var buf = await outBlob.arrayBuffer();
+    terrainTileCache.set(params.url, buf);
+    return { data: buf };
+  });
+
+  // XYZ templates for each basemap, for MapLibre raster sources.
+  var basemaps3D = {
+    esriHybrid: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}']
+  };
+  var ESRI_LABELS_3D = ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'];
+
+  function ensure3DMap() {
+    if (map3DGL) return;
+    map3DGL = new maplibregl.Map({
+      container: 'map3d',
+      style: { version: 8, sources: {}, layers: [] },
+      center: [0, 0], zoom: 2, pitch: 60, bearing: 0,
+      maxPitch: 85, maxZoom: 15, antialias: true, attributionControl: false
+    });
+    map3DGL.dragRotate.disable();
+    map3DGL.touchZoomRotate.disableRotation();
+
+    map3DGL.on('moveend', function() {
+      if (!is3DActive || !overlaySyncArmed) return;
+      var c3d = map3DGL.getCenter();
+      var z3d = map3DGL.getZoom();
+      var cLeaflet = map.getCenter();
+      var zLeaflet = map.getZoom();
+      var moved = Math.abs(c3d.lat - cLeaflet.lat) > 0.01 || Math.abs(c3d.lng - cLeaflet.lng) > 0.01 || Math.abs(z3d - zLeaflet) > 0.4;
+      if (!moved) return;
+      map.setView([c3d.lat, c3d.lng], Math.round(z3d), { animate: false });
+      updateOverlayImage();
+    });
+
+    map3DGL.on('load', function() {
+      map3DGL.addSource('terrainSource', {
+        type: 'raster-dem',
+        tiles: ['ukwarmap-terrain://{z}/{x}/{y}'],
+        tileSize: 256, encoding: 'terrarium', maxzoom: 15
+      });
+      map3DGL.setTerrain({ source: 'terrainSource', exaggeration: 1.0 });
+      map3DGL.setSky({ 'sky-color': '#8bb8e8', 'horizon-color': '#eef2f7', 'fog-color': '#cbd8e6', 'fog-ground-blend': 0.5 });
+      map3DReady = true;
+      apply3DBasemapLayer(currentBasemapKey);
+      if (pendingShow3D) { pendingShow3D = false; refresh3DView(); }
+    });
+  }
+
+  function apply3DBasemapLayer(key) {
+    if (!map3DGL) return;
+    ['esriImageryLayer', 'esriImageryLayer2'].forEach(function(id){ if (map3DGL.getLayer(id)) map3DGL.removeLayer(id); });
+    ['esriImagery', 'esriImagery2'].forEach(function(id){ if (map3DGL.getSource(id)) map3DGL.removeSource(id); });
+    var beforeId = map3DGL.getLayer('leafletOverlayLayer') ? 'leafletOverlayLayer' : undefined;
+    map3DGL.addSource('esriImagery', { type: 'raster', tiles: basemaps3D[key], tileSize: 256, maxzoom: 19 });
+    map3DGL.addLayer({ id: 'esriImageryLayer', type: 'raster', source: 'esriImagery' }, beforeId);
+    if (key === 'esriHybrid') {
+      map3DGL.addSource('esriImagery2', { type: 'raster', tiles: ESRI_LABELS_3D, tileSize: 256, maxzoom: 19 });
+      map3DGL.addLayer({ id: 'esriImageryLayer2', type: 'raster', source: 'esriImagery2' }, beforeId);
+    }
+  }
+
+  // Flatten every Leaflet-rendered canvas (vector overlays, terrain overlay)
+  // into one image and drape it on the 3D terrain at its real coordinates.
+  function compositeLeafletOverlay() {
+    var size = map.getSize();
+    var dpr = window.devicePixelRatio || 1;
+    var canvas = document.createElement('canvas');
+    canvas.width = size.x * dpr;
+    canvas.height = size.y * dpr;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var mapEl = map.getContainer();
+    var mapRect = mapEl.getBoundingClientRect();
+    mapEl.querySelectorAll('canvas').forEach(function(c) {
+      if (c.closest('.leaflet-tile-pane')) return;
+      var r = c.getBoundingClientRect();
+      try { ctx.drawImage(c, r.left - mapRect.left, r.top - mapRect.top, r.width, r.height); } catch (e) {}
+    });
+    return canvas.toDataURL('image/png');
+  }
+
+  function updateOverlayImage() {
+    if (!map3DGL) return;
+    var b = map.getBounds();
+    var coordinates = [
+      [b.getWest(), b.getNorth()], [b.getEast(), b.getNorth()],
+      [b.getEast(), b.getSouth()], [b.getWest(), b.getSouth()]
+    ];
+    var dataUrl = compositeLeafletOverlay();
+    var src = map3DGL.getSource('leafletOverlay');
+    if (src) {
+      src.updateImage({ url: dataUrl, coordinates: coordinates });
+    } else {
+      map3DGL.addSource('leafletOverlay', { type: 'image', url: dataUrl, coordinates: coordinates });
+      map3DGL.addLayer({ id: 'leafletOverlayLayer', type: 'raster', source: 'leafletOverlay', paint: { 'raster-opacity': 1, 'raster-fade-duration': 0 } });
+    }
+  }
+
+  function refresh3DView() {
+    if (!map3DReady) { pendingShow3D = true; return; }
+    map3DGL.resize();
+    var center = map.getCenter();
+    map3DGL.jumpTo({ center: [center.lng, center.lat], zoom: map.getZoom() });
+    updateOverlayImage();
+    overlaySyncArmed = true;
+  }
+
+  function toggle3DView(on) {
+    is3DActive = on;
+    if (toggle3DBtnEl) {
+      toggle3DBtnEl.textContent = on ? '2D' : '3D';
+      toggle3DBtnEl.classList.toggle('active-toggle', on);
+    }
+    if (on) {
+      map.dragging.disable();
+      map.doubleClickZoom.disable();
+      map.scrollWheelZoom.disable();
+      map.touchZoom.disable();
+      map.boxZoom.disable();
+      map3DContainerEl.classList.add('active');
+      ensure3DMap();
+      refresh3DView();
+    } else {
+      map3DContainerEl.classList.remove('active');
+      map.dragging.enable();
+      map.doubleClickZoom.enable();
+      map.scrollWheelZoom.enable();
+      map.touchZoom.enable();
+      map.boxZoom.enable();
+    }
+  }
 
   var BasemapControl = L.Control.extend({
     options: { position: 'topright' },
@@ -685,6 +889,7 @@
     document.querySelectorAll('.basemap-control button').forEach(function(b){
       b.classList.toggle('active', b.dataset.key === key);
     });
+    if (map3DGL) apply3DBasemapLayer(key);
   }
 
   var SUN_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></svg>';
@@ -752,6 +957,7 @@
   });
   map.addControl(new DeviceControl());
 
+  /* --- Layers --- */
   var mainLayers = {};
   var extraLayers = {};
   var layerFiles = [
@@ -846,6 +1052,7 @@
       cb.addEventListener('change', function(){
         if (cb.checked) { if (!map.hasLayer(layer)) map.addLayer(layer); }
         else { if (map.hasLayer(layer)) map.removeLayer(layer); }
+        if (is3DActive) updateOverlayImage();
       });
 
       var lbl = document.createElement('label');
@@ -858,6 +1065,193 @@
     });
   }
 
+  /* --- 2D terrain overlay (HypsometricLayer) --- */
+  var ELEV_STOPS = [
+    [-5,  70, 170, 210],
+    [0,   80, 200, 130],
+    [20,  120, 210, 100],
+    [50,  170, 220, 80],
+    [90,  210, 220, 70],
+    [130, 240, 210, 80],
+    [170, 245, 185, 120],
+    [220, 245, 160, 155],
+    [270, 240, 155, 170],
+    [320, 245, 180, 190],
+    [360, 255, 225, 220]
+  ];
+
+  function elevColor(e, min, max, mode) {
+    var t01 = max > min ? Math.max(0, Math.min(1, (e - min) / (max - min))) : 0.5;
+    if (mode === 'bw') { var v = Math.round(t01 * 255); return [v, v, v, 255]; }
+    if (mode === 'black-transparent') { return [0, 0, 0, Math.round((1 - t01) * 255)]; }
+    var stops = ELEV_STOPS;
+    var mapped = stops[0][0] + t01 * (stops[stops.length - 1][0] - stops[0][0]);
+    if (mapped <= stops[0][0]) return [stops[0][1], stops[0][2], stops[0][3], 255];
+    for (var i = 1; i < stops.length; i++) {
+      if (mapped <= stops[i][0]) {
+        var f = (mapped - stops[i - 1][0]) / (stops[i][0] - stops[i - 1][0]);
+        return [
+          Math.round(stops[i - 1][1] + f * (stops[i][1] - stops[i - 1][1])),
+          Math.round(stops[i - 1][2] + f * (stops[i][2] - stops[i - 1][2])),
+          Math.round(stops[i - 1][3] + f * (stops[i][3] - stops[i - 1][3])),
+          255
+        ];
+      }
+    }
+    var last = stops[stops.length - 1];
+    return [last[1], last[2], last[3], 255];
+  }
+
+  function colorElevTile(tile, min, max, mode) {
+    var elevData = tile._elevData;
+    if (!elevData) return;
+    var w = tile.width, h = tile.height;
+    var ctx = tile.getContext('2d');
+    var imageData = ctx.createImageData(w, h);
+    var d = imageData.data;
+    for (var j = 0, i = 0; j < elevData.length; j++, i += 4) {
+      var c = elevColor(elevData[j], min, max, mode);
+      d[i] = c[0]; d[i+1] = c[1]; d[i+2] = c[2]; d[i+3] = c[3];
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  var TERRAIN_MODE_STORAGE_KEY = 'polradTerrainMode_v1';
+  var terrainMode = 'color';
+  try { terrainMode = localStorage.getItem(TERRAIN_MODE_STORAGE_KEY) || 'color'; } catch (e) {}
+
+  var topoTileLayer = null;
+  var topoRange = { min: -5, max: 360 };
+  var topoRecolorTimer = null;
+
+  var HypsometricLayer = L.GridLayer.extend({
+    createTile: function(coords, done) {
+      var tile = document.createElement('canvas');
+      var size = this.getTileSize();
+      tile.width = size.x;
+      tile.height = size.y;
+      var ctx = tile.getContext('2d');
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0, size.x, size.y);
+        var srcData = ctx.getImageData(0, 0, size.x, size.y).data;
+        var elevData = new Float32Array(size.x * size.y);
+        for (var i = 0, j = 0; i < srcData.length; i += 4, j++) {
+          elevData[j] = (srcData[i] * 256 + srcData[i + 1] + srcData[i + 2] / 256) - 32768;
+        }
+        tile._elevData = elevData;
+        colorElevTile(tile, topoRange.min, topoRange.max, terrainMode);
+        done(null, tile);
+        scheduleTopoRecolor();
+      };
+      img.onerror = function() { done(null, tile); };
+      img.src = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/' + coords.z + '/' + coords.x + '/' + coords.y + '.png';
+      return tile;
+    }
+  });
+
+  function scheduleTopoRecolor() {
+    clearTimeout(topoRecolorTimer);
+    topoRecolorTimer = setTimeout(recolorTopo, 200);
+  }
+
+  function recolorTopo() {
+    if (!topoTileLayer || !topoTileLayer._tiles) return;
+    var tiles = [];
+    var samples = [];
+    var zoom = map.getZoom();
+    for (var key in topoTileLayer._tiles) {
+      var t = topoTileLayer._tiles[key];
+      if (t.current && t.el._elevData && t.coords && t.coords.z === zoom) {
+        tiles.push(t.el);
+        var ed = t.el._elevData;
+        for (var i = 0; i < ed.length; i += 64) samples.push(ed[i]);
+      }
+    }
+    if (!samples.length) return;
+    samples.sort(function(a, b){ return a - b; });
+    var p = function(pct){ return samples[Math.floor(pct * (samples.length - 1))]; };
+    var gMin = Math.max(p(0.02), -50);
+    var gMax = Math.min(p(0.98), 600);
+    if (gMax <= gMin) return;
+    topoRange = { min: gMin, max: gMax };
+    tiles.forEach(function(t){ colorElevTile(t, gMin, gMax, terrainMode); });
+    updateElevLegend(gMin, gMax);
+    if (is3DActive) updateOverlayImage();
+  }
+
+  var ElevLegendControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function() {
+      var container = L.DomUtil.create('div', 'legend-control');
+      container.id = 'elevLegend';
+      L.DomEvent.disableClickPropagation(container);
+      this._container = container;
+      return container;
+    }
+  });
+  var elevLegendControl = new ElevLegendControl();
+  map.addControl(elevLegendControl);
+
+  function updateElevLegend(min, max) {
+    var container = elevLegendControl._container;
+    if (!container) return;
+    if (terrainMode === 'black-transparent') { container.style.display = 'none'; return; }
+    var steps = 8;
+    var rows = '<div class="legend-title">Elevation</div>';
+    for (var i = steps; i >= 0; i--) {
+      var elev = min + (i / steps) * (max - min);
+      var c = elevColor(elev, min, max, terrainMode);
+      rows += '<div style="display:flex;align-items:center;gap:5px;margin:1px 0;">' +
+        '<span style="width:22px;height:11px;display:inline-block;background:rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ');opacity:' + (c[3] / 255).toFixed(2) + ';border:1px solid var(--border);border-radius:2px;"></span>' +
+        '<span style="font-size:10.5px;color:var(--sub);">' + Math.round(elev) + ' m</span>' +
+      '</div>';
+    }
+    container.innerHTML = rows;
+    container.style.display = 'block';
+  }
+
+  function toggleTerrainOverlay(enabled) {
+    if (enabled) {
+      if (!topoTileLayer) {
+        topoTileLayer = new HypsometricLayer({
+          pane: 'terrainPane', opacity: 0.85, maxZoom: 15,
+          attribution: 'Elevation: AWS Terrain Tiles'
+        });
+      }
+      topoTileLayer.addTo(map);
+      topoTileLayer.bringToFront();
+      map.on('moveend zoomend', scheduleTopoRecolor);
+      scheduleTopoRecolor();
+    } else {
+      if (topoTileLayer) map.removeLayer(topoTileLayer);
+      map.off('moveend zoomend', scheduleTopoRecolor);
+      clearTimeout(topoRecolorTimer);
+      elevLegendControl._container.style.display = 'none';
+    }
+    if (is3DActive) updateOverlayImage();
+  }
+
+  document.getElementById('chkTerrain').addEventListener('change', function(e) {
+    document.getElementById('terrainOpts').style.display = e.target.checked ? 'block' : 'none';
+    toggleTerrainOverlay(e.target.checked);
+  });
+  var terrainModeSelect = document.getElementById('terrainMode');
+  terrainModeSelect.value = terrainMode;
+  terrainModeSelect.addEventListener('change', function(e) {
+    terrainMode = e.target.value;
+    try { localStorage.setItem(TERRAIN_MODE_STORAGE_KEY, terrainMode); } catch (err) {}
+    if (topoTileLayer && topoTileLayer._tiles) {
+      Object.values(topoTileLayer._tiles).forEach(function(t){
+        if (t.el._elevData) colorElevTile(t.el, topoRange.min, topoRange.max, terrainMode);
+      });
+    }
+    updateElevLegend(topoRange.min, topoRange.max);
+    if (is3DActive) updateOverlayImage();
+  });
+
+  /* --- Floating panels --- */
   function closeAllPanels(except) {
     document.querySelectorAll('.floating-panel').forEach(function(p){
       if (p !== except) p.classList.remove('open');
@@ -918,6 +1312,7 @@
     makePanelDraggable(document.getElementById(id));
   });
 
+  /* --- Ruler --- */
   var rulerPoints = [];
   var rulerClosed = false;
   var rulerRedoPoints = [];
@@ -926,12 +1321,8 @@
   var rulerAreaEl = document.getElementById('rulerArea');
   var rulerAreaWrap = document.getElementById('rulerAreaWrap');
 
-  function formatDistance(m) {
-    return m >= 1000 ? (m / 1000).toFixed(2) + ' km' : Math.round(m) + ' m';
-  }
-  function formatArea(m2) {
-    return m2 >= 1e6 ? (m2 / 1e6).toFixed(2) + ' km²' : Math.round(m2) + ' m²';
-  }
+  function formatDistance(m) { return m >= 1000 ? (m / 1000).toFixed(2) + ' km' : Math.round(m) + ' m'; }
+  function formatArea(m2) { return m2 >= 1e6 ? (m2 / 1e6).toFixed(2) + ' km²' : Math.round(m2) + ' m²'; }
   function polygonAreaMeters(points) {
     if (points.length < 3) return 0;
     var refLat = points[0].lat * Math.PI / 180;
@@ -972,6 +1363,7 @@
     } else {
       rulerAreaWrap.style.display = 'none';
     }
+    if (is3DActive) updateOverlayImage();
   }
   function rulerClear() {
     rulerPoints = [];
@@ -980,6 +1372,7 @@
     rulerLayerGroup.clearLayers();
     rulerAreaWrap.style.display = 'none';
     rulerDistanceEl.textContent = '0 m';
+    if (is3DActive) updateOverlayImage();
   }
   function rulerAddPoint(latlng) {
     if (rulerClosed) rulerClear();
@@ -997,17 +1390,12 @@
     rulerRedoPoints = [];
     redrawRuler();
   }
-  document.getElementById('btnRulerClear').addEventListener('click', function(){
-    rulerClear();
-  });
+  document.getElementById('btnRulerClear').addEventListener('click', rulerClear);
 
-  map.on('click', function(e){
-    if (activeTool === 'ruler') rulerAddPoint(e.latlng);
-  });
-  map.on('dblclick', function(e){
-    if (activeTool === 'ruler') { L.DomEvent.preventDefault(e.originalEvent); redrawRuler(); }
-  });
+  map.on('click', function(e){ if (activeTool === 'ruler') rulerAddPoint(e.latlng); });
+  map.on('dblclick', function(e){ if (activeTool === 'ruler') { L.DomEvent.preventDefault(e.originalEvent); redrawRuler(); } });
 
+  /* --- Search --- */
   var searchInput = document.getElementById('searchInput');
   var searchResultsEl = document.getElementById('searchResults');
   var searchClearBtn = document.getElementById('searchClearBtn');
@@ -1110,6 +1498,7 @@
     }
   });
 
+  /* --- Draw tools --- */
   var activeTool = null;
   var currentColor = '#ff0000';
   var currentThickness = 3;
@@ -1239,6 +1628,7 @@
     }
     if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
     drawingPoints = [];
+    if (is3DActive) updateOverlayImage();
   });
 
   var coordMarker = null;
@@ -1289,6 +1679,7 @@
         userDrawings.addLayer(rect);
         if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
         drawingPoints = [];
+        if (is3DActive) updateOverlayImage();
       }
       return;
     }
@@ -1307,6 +1698,7 @@
         addArrow(drawingPoints[0], e.latlng, currentColor, currentThickness, activeTool === 'dashed-arrow');
         if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
         drawingPoints = [];
+        if (is3DActive) updateOverlayImage();
       }
     }
   });
@@ -1381,11 +1773,13 @@
       userDrawings.addLayer(line);
     }
     resetDrawingState();
+    if (is3DActive) updateOverlayImage();
   }
   function clearDrawings() {
     userDrawings.clearLayers();
     resetDrawingState();
     document.getElementById('draw-result').innerText = 'Select a shape to draw.';
+    if (is3DActive) updateOverlayImage();
   }
 
 </script>
