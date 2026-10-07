@@ -74,7 +74,7 @@
     #crosshair.active{display:block;}
     .ch-line{position:absolute;background:var(--text);opacity:.6;box-shadow:0 0 2px #0008;}
     .ch-h{width:30px;height:1.5px;top:0;left:-15px;}
-    .ch-v{width:1.5px;height:30px;top:0;left:0;}
+    .ch-v{width:1.5px;height:30px;top:-15px;left:0;}
     .ch-hotspot{
       position:absolute;top:-20px;left:-20px;width:40px;height:40px;border-radius:50%;
       pointer-events:auto;cursor:pointer;background:transparent;transition:background .12s;
@@ -121,34 +121,127 @@
       border-radius:4px;font-size:11px;padding:4px 6px;font-family:inherit;width:100%;cursor:pointer;
     }
 
-    .snapshot-section{padding:10px 12px;border-bottom:1px solid var(--border);}
+    /* Snapshot panel — one element, two placements.
+       - .snapshot-in-sidebar (default): renders as a normal section inside #sidebar.
+       - .snapshot-in-bar: fixed bottom-center bar on the map, shown while the
+         sidebar is collapsed. Same DOM, so lock state survives the transition. */
+    #snapshotPanel{ display:none; }
+
+    /* Sidebar placement */
+    #snapshotPanel.snapshot-in-sidebar{
+      display:block;
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+    }
+    #snapshotPanel.snapshot-in-sidebar .snapshot-title{ display:block; }
+
+    /* Bottom-bar placement */
+    #snapshotPanel.snapshot-in-bar{
+      display:flex;
+      position:fixed;
+      bottom:18px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:1250;
+      width:min(560px,calc(100vw - 40px));
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      box-shadow:0 6px 24px #0009, 0 0 0 1px #ffffff08 inset;
+      padding:10px 12px;
+      flex-direction:column;
+      gap:8px;
+    }
+    :root[data-theme="light"] #snapshotPanel.snapshot-in-bar{
+      box-shadow:0 6px 24px #1a1e2933, 0 0 0 1px #00000008 inset;
+    }
+    #snapshotPanel.snapshot-in-bar .snapshot-title{ display:block; }
+
+    .snapshot-title{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:var(--sub);
+      margin:0 0 8px;
+    }
+    #snapshotPanel.snapshot-in-bar .snapshot-title{ margin:0; }
+
     #snapshotDescBox{
-      background:#1a1f2b;border:2px solid #2d5aed;border-radius:10px;padding:14px 16px;
-      min-height:120px;color:#6b8cff;font-family:ui-monospace,Consolas,monospace;
-      font-size:15px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;
+      background:#1a1f2b;border:2px solid #2d5aed;border-radius:10px;padding:12px 14px;
+      min-height:80px;color:#6b8cff;font-family:ui-monospace,Consolas,monospace;
+      font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;
     }
     :root[data-theme="light"] #snapshotDescBox{background:#eef3ff;color:#2d5aed;}
     #snapshotDescBox .snapshot-placeholder{color:#6b8cff;opacity:.85;}
     :root[data-theme="light"] #snapshotDescBox .snapshot-placeholder{color:#2d5aed;}
-    #snapshotDescBox .snapshot-meta{display:block;color:#8ba7ff;font-size:11px;margin-top:8px;opacity:.7;}
+    #snapshotDescBox .snapshot-meta{display:block;color:#8ba7ff;font-size:11px;margin-top:6px;opacity:.7;}
     :root[data-theme="light"] #snapshotDescBox .snapshot-meta{color:#4a72c9;}
 
-    #snapshotNavRow{display:flex;gap:10px;align-items:stretch;margin-top:8px;}
+    #snapshotNavRow{
+      display:flex;
+      gap:10px;
+      align-items:stretch;
+      margin-top:8px;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotNavRow{ margin-top:0; }
+
     .snapshot-nav-btn{
-      flex:1;background:transparent;border:2px solid #2d5aed;border-radius:8px;padding:8px 0;
-      display:flex;align-items:center;justify-content:center;color:#2d5aed;font-size:26px;line-height:1;
-      cursor:pointer;transition:background .12s,border-color .12s,color .12s;min-height:44px;
+      flex:1;
+      background:transparent;
+      border:2px solid #2d5aed;
+      border-radius:8px;
+      padding:8px 0;
+      display:flex;align-items:center;justify-content:center;
+      color:#2d5aed;font-size:26px;line-height:1;
+      cursor:pointer;transition:background .12s,border-color .12s,color .12s;
+      min-height:44px;
     }
     .snapshot-nav-btn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
     .snapshot-nav-btn svg{width:26px;height:26px;}
+
+    /* Lock button — centered between the two arrows. Glows with a soft pulse
+       when the locked mode is active. */
     #snapshotLockBtn{
-      width:48px;background:transparent;border:2px solid #2d5aed;border-radius:8px;padding:0;
-      display:flex;align-items:center;justify-content:center;color:#2d5aed;font-size:20px;
-      cursor:pointer;transition:background .12s,border-color .12s,color .12s;min-height:44px;
+      flex:0 0 60px;
+      background:transparent;
+      border:2px solid #2d5aed;
+      border-radius:8px;
+      padding:0;
+      display:flex;align-items:center;justify-content:center;
+      color:#2d5aed;font-size:20px;
+      cursor:pointer;transition:background .18s,border-color .18s,color .18s,box-shadow .18s;
+      min-height:44px;
+      position:relative;
     }
     #snapshotLockBtn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
-    #snapshotLockBtn svg{width:20px;height:20px;}
-    #snapshotMeta{font-size:10.5px;color:var(--sub);text-align:center;letter-spacing:.02em;margin-top:6px;}
+    #snapshotLockBtn svg{width:22px;height:22px;transition:transform .18s;}
+    #snapshotLockBtn.locked{
+      background:#2d5aed;
+      border-color:#4b75ff;
+      color:#fff;
+      box-shadow:0 0 0 3px #2d5aed33, 0 0 18px 2px #2d5aedcc;
+      animation:snapshotLockPulse 2.2s ease-in-out infinite;
+    }
+    #snapshotLockBtn.locked:hover{
+      background:#3f6fff;
+      border-color:#5e86ff;
+      box-shadow:0 0 0 3px #3f6fff33, 0 0 22px 3px #3f6fffee;
+    }
+    @keyframes snapshotLockPulse{
+      0%, 100% { box-shadow:0 0 0 3px #2d5aed33, 0 0 18px 2px #2d5aedcc; }
+      50%      { box-shadow:0 0 0 4px #2d5aed44, 0 0 24px 4px #2d5aede6; }
+    }
+
+    #snapshotMeta{
+      font-size:10.5px;color:var(--sub);text-align:center;letter-spacing:.02em;margin-top:6px;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotMeta{ margin-top:0; }
+
+    /* Collapsed-state bar is hidden while the sidebar is expanded. */
+    :root:not([data-device="mobile"]) body.sidebar-collapsed #snapshotPanel.snapshot-in-bar{ display:flex; }
+    :root:not([data-device="mobile"]) body:not(.sidebar-collapsed) #snapshotPanel.snapshot-in-bar{ display:none; }
+    :root[data-device="mobile"] body:not(.sidebar-expanded) #snapshotPanel.snapshot-in-bar{ display:flex; }
+    :root[data-device="mobile"] body.sidebar-expanded #snapshotPanel.snapshot-in-bar{ display:none; }
 
     .credit-block{
       display:flex;flex-direction:column;gap:6px;align-items:flex-end;
@@ -164,11 +257,12 @@
     ::-webkit-scrollbar{width:8px;}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
+    /* Floating panels — LEFT side of the map. */
     .floating-panel{
-      position:fixed;top:64px;right:320px;z-index:1200;display:none;
+      position:fixed;top:64px;left:14px;z-index:1200;display:none;
       background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px #0007;
       padding:10px 12px;font-size:12.5px;flex-direction:column;gap:6px;
-      width:min(340px,calc(100vw - 340px));
+      width:min(320px,calc(100vw - 340px));
       max-height:calc(100vh - 90px);overflow-y:auto;
     }
     .floating-panel.open{display:flex;}
@@ -201,7 +295,7 @@
     .panel-result{margin-top:8px;font-size:12px;color:var(--sub);min-height:24px;line-height:1.45;}
 
     #rulerPanel{
-      position:fixed;top:64px;right:320px;z-index:1200;display:none;
+      position:fixed;top:64px;left:14px;z-index:1200;display:none;
       background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px #0007;
       padding:9px 12px;font-size:12.5px;gap:8px;align-items:center;
       flex-direction:row;flex-wrap:wrap;
@@ -211,29 +305,32 @@
     #rulerPanel .ruler-stat b{color:var(--good);}
     #rulerPanel .panel-drag-handle{width:100%;margin-bottom:2px;}
 
-    #searchBox{
-      position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1200;
-      width:min(340px,85vw);
+    /* Search — dropdown panel anchored under its toggle button (top-right). */
+    #searchPanel{
+      position:fixed;top:64px;right:52px;z-index:1200;display:none;
+      background:var(--panel);border:1px solid var(--border);border-radius:10px;
+      box-shadow:0 4px 14px #0007;padding:8px;width:min(320px,calc(100vw - 100px));
     }
+    #searchPanel.open{display:block;}
+    #searchRow{display:flex;gap:6px;}
     #searchInput{
-      width:100%;padding:9px 34px 9px 34px;border-radius:20px;border:1px solid var(--border);
-      background:var(--panel);color:var(--text);font-size:13px;box-shadow:0 4px 14px #0007;
+      flex:1;min-width:0;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);
+      background:var(--panel2);color:var(--text);font-size:12.5px;font-family:inherit;outline:none;
     }
-    #searchInput:focus{outline:none;border-color:var(--accent);}
-    #searchIcon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--sub);pointer-events:none;font-size:13px;}
-    #searchClearBtn{
-      position:absolute;right:6px;top:50%;transform:translateY(-50%);display:none;
-      width:22px;height:22px;padding:0;align-items:center;justify-content:center;
-      border:none;background:transparent;color:var(--sub);border-radius:50%;cursor:pointer;
+    #searchInput:focus{border-color:var(--accent);}
+    #searchGo{
+      width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;
+      background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius-sm);
+      color:var(--text);cursor:pointer;
     }
-    #searchClearBtn:hover{background:var(--panel3);color:var(--text);}
+    #searchGo:hover{background:var(--panel3);}
     #searchResults{
-      margin-top:6px;background:var(--panel);border:1px solid var(--border);border-radius:10px;
-      overflow:hidden;box-shadow:0 4px 14px #0007;display:none;max-height:260px;overflow-y:auto;
+      margin-top:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);
+      overflow:hidden;display:none;max-height:220px;overflow-y:auto;
     }
-    .search-result{padding:8px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border);}
+    .search-result{padding:7px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);}
     .search-result:last-child{border-bottom:none;}
-    .search-result:hover,.search-result.active{background:var(--panel2);}
+    .search-result:hover{background:var(--panel2);}
     .search-result .sr-main{color:var(--text);}
     .search-result .sr-sub{color:var(--sub);font-size:10.5px;margin-top:1px;}
 
@@ -286,6 +383,13 @@
     .coord-popup button{padding:3px 6px;font-size:10.5px;}
     .coord-popup .cp-share{width:100%;margin-top:4px;}
 
+    .coords-copy-btn{
+      display:inline-block;margin-top:8px;padding:4px 9px;border:1px solid var(--border);
+      border-radius:4px;background:var(--panel2);color:var(--text);cursor:pointer;font-size:11px;
+      font-family:inherit;
+    }
+    .coords-copy-btn:hover{background:var(--panel3);}
+
     #watermark-overlay {
       position:absolute;top:0;left:0;right:0;bottom:0;
       z-index:750;pointer-events:none;
@@ -306,16 +410,23 @@
       content:''; position:absolute; right:18px; top:50%; width:28px; height:3px;
       background:var(--sub); border-radius:2px; transform:translateY(-50%);
     }
-    :root[data-device="mobile"] #searchBox{ width:calc(100vw - 150px); }
     :root[data-device="mobile"] .basemap-toggle-btn{ width:42px; height:42px; }
     :root[data-device="mobile"] button{ padding:9px 12px; font-size:13px; min-height:38px; }
     :root[data-device="mobile"] .floating-panel{
-      right:12px; left:12px; top:auto; bottom:80px; width:auto; max-height:60vh;
+      left:12px; right:12px; top:auto; bottom:80px; width:auto; max-height:60vh;
     }
     :root[data-device="mobile"] #rulerPanel{
-      right:12px; left:12px; top:auto; bottom:80px; width:auto;
+      left:12px; right:12px; top:auto; bottom:80px; width:auto;
     }
-    :root[data-device="mobile"] #snapshotDescBox{ min-height:90px; font-size:13.5px; }
+    :root[data-device="mobile"] #snapshotDescBox{ min-height:70px; font-size:12.5px; }
+    :root[data-device="mobile"] #searchPanel{
+      right:12px; left:12px; top:64px; width:auto;
+    }
+    /* Bottom-bar placement on mobile is handled by the body-class rules above. */
+    :root[data-device="mobile"] #snapshotPanel.snapshot-in-bar{
+      width:calc(100vw - 24px);
+      bottom:12px;
+    }
   </style>
 </head>
 
@@ -375,8 +486,10 @@
       </div>
     </div>
 
-    <div class="snapshot-section">
-      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);margin:0 0 8px;">Snapshots</h3>
+    <!-- The snapshot panel element lives here in the DOM (inside the sidebar)
+         by default. JS toggles its placement class to move it into the bottom bar. -->
+    <div id="snapshotPanel" class="snapshot-in-sidebar">
+      <div class="snapshot-title">Snapshots</div>
       <div id="snapshotDescBox">
         <span class="snapshot-placeholder">Snapshot description</span>
       </div>
@@ -384,12 +497,12 @@
         <button class="snapshot-nav-btn" id="btnSnapPrev" title="Previous snapshot">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <button class="snapshot-nav-btn" id="btnSnapNext" title="Next snapshot">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
-        <button id="snapshotLockBtn" title="Lock snapshot navigation">
+        <button id="snapshotLockBtn" title="Lock map position while navigating snapshots">
           <svg class="icon-unlocked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
           <svg class="icon-locked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </button>
+        <button class="snapshot-nav-btn" id="btnSnapNext" title="Next snapshot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </button>
       </div>
       <div id="snapshotMeta">Unlocked</div>
@@ -406,14 +519,12 @@
 
 </div>
 
-<div id="searchBox">
-  <div style="position:relative;">
-    <span id="searchIcon">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg>
-    </span>
+<!-- Search dropdown panel (top-right, opens under the search toggle button) -->
+<div id="searchPanel">
+  <div id="searchRow">
     <input id="searchInput" type="text" placeholder="Search place or coordinates…" autocomplete="off">
-    <button id="searchClearBtn" title="Clear">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+    <button id="searchGo" title="Search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </button>
   </div>
   <div id="searchResults"></div>
@@ -524,12 +635,15 @@
     position: 'bottomleft', metric: true, imperial: true, maxWidth: 150
   }).addTo(map);
 
+  map.createPane('terrainPane');
+  // Terrain BELOW the political layers, so russia/grayzone read on top of the tint.
+  map.getPane('terrainPane').style.zIndex = 400;
   map.createPane('territoryPane');
   map.getPane('territoryPane').style.zIndex = 420;
   map.createPane('grayZonePane');
   map.getPane('grayZonePane').style.zIndex = 460;
-  map.createPane('terrainPane');
-  map.getPane('terrainPane').style.zIndex = 500;
+  map.createPane('fortsPane');
+  map.getPane('fortsPane').style.zIndex = 480;
   map.createPane('drawingsPane');
   map.getPane('drawingsPane').style.zIndex = 650;
   map.createPane('markersPane');
@@ -613,6 +727,31 @@
     openCoordPopupAt(map.getCenter());
   });
 
+  /* --- Sidebar collapse / expand, with class markers on <body> so CSS can
+     drive the snapshot panel's placement without JS touching the DOM. */
+  function setSidebarCollapsed(collapsed){
+    var sidebar = document.getElementById('sidebar');
+    var isMobile = document.documentElement.getAttribute('data-device') === 'mobile';
+    if (isMobile) {
+      sidebar.classList.toggle('expanded', !collapsed);
+      document.body.classList.toggle('sidebar-expanded', !collapsed);
+      document.body.classList.remove('sidebar-collapsed');
+    } else {
+      sidebar.classList.toggle('collapsed', collapsed);
+      document.body.classList.toggle('sidebar-collapsed', collapsed);
+      document.body.classList.remove('sidebar-expanded');
+    }
+    var snap = document.getElementById('snapshotPanel');
+    if (collapsed) {
+      snap.classList.remove('snapshot-in-sidebar');
+      snap.classList.add('snapshot-in-bar');
+    } else {
+      snap.classList.remove('snapshot-in-bar');
+      snap.classList.add('snapshot-in-sidebar');
+    }
+    setTimeout(function(){ map.invalidateSize(); }, 260);
+  }
+
   /* --- Control stack --- */
   var SidebarToggleControl = L.Control.extend({
     options: { position: 'topright' },
@@ -624,8 +763,8 @@
       L.DomEvent.on(btn, 'click', function(){
         var sidebar = document.getElementById('sidebar');
         var isMobile = document.documentElement.getAttribute('data-device') === 'mobile';
-        sidebar.classList.toggle(isMobile ? 'expanded' : 'collapsed');
-        setTimeout(function(){ map.invalidateSize(); }, 260);
+        var currentlyHidden = isMobile ? !sidebar.classList.contains('expanded') : sidebar.classList.contains('collapsed');
+        setSidebarCollapsed(!currentlyHidden);
       });
       L.DomEvent.disableClickPropagation(btn);
       return btn;
@@ -633,7 +772,7 @@
   });
   map.addControl(new SidebarToggleControl());
 
-  // 3D toggle — swaps between the Leaflet 2D map and the MapLibre 3D map.
+  // 3D toggle.
   var is3DActive = false;
   var map3DGL = null, map3DReady = false, pendingShow3D = false, overlaySyncArmed = false;
   var map3DContainerEl = document.getElementById('map3d');
@@ -656,16 +795,9 @@
   });
   map.addControl(new Toggle3DControl());
 
-  // Reparent Leaflet's control container into #mapWrap so its controls stay
-  // above the MapLibre canvas when 3D turns on.
   document.getElementById('mapWrap').appendChild(map._controlContainer);
 
-  /* --- AWS Terrarium: despeckling protocol for MapLibre ---
-     The free public Terrarium dataset has occasional corrupted single-pixel
-     spikes. Each decoded pixel is compared to the median of its 8 neighbors;
-     outliers (outside a sanity range, or >30m from their neighbors) are
-     replaced with that median before MapLibre ever sees the tile. Tiles are
-     cached in memory for the session. */
+  /* --- AWS Terrarium despeckling protocol for MapLibre 3D --- */
   var TERRAIN_GLOBAL_MIN = -100, TERRAIN_GLOBAL_MAX = 600, TERRAIN_LOCAL_DEVIATION = 30;
   var terrainTileCache = new Map();
   maplibregl.addProtocol('ukwarmap-terrain', async function(params) {
@@ -723,7 +855,6 @@
     return { data: buf };
   });
 
-  // XYZ templates for each basemap, for MapLibre raster sources.
   var basemaps3D = {
     esriHybrid: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}']
@@ -780,8 +911,6 @@
     }
   }
 
-  // Flatten every Leaflet-rendered canvas (vector overlays, terrain overlay)
-  // into one image and drape it on the 3D terrain at its real coordinates.
   function compositeLeafletOverlay() {
     var size = map.getSize();
     var dpr = window.devicePixelRatio || 1;
@@ -957,6 +1086,27 @@
   });
   map.addControl(new DeviceControl());
 
+  /* --- Search control (top-right, dropdown panel) --- */
+  var SearchToggleControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.title = 'Search';
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.5" y2="15.5"/></svg>';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){
+        var p = document.getElementById('searchPanel');
+        var opening = !p.classList.contains('open');
+        p.classList.toggle('open', opening);
+        btn.classList.toggle('active-toggle', opening);
+        if (opening) setTimeout(function(){ document.getElementById('searchInput').focus(); }, 30);
+      });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
+  });
+  map.addControl(new SearchToggleControl());
+
   /* --- Layers --- */
   var mainLayers = {};
   var extraLayers = {};
@@ -982,6 +1132,19 @@
       noOutline: false,
       smoothFactor: 2.0,
       pane: 'grayZonePane'
+    },
+    {
+      file: 'forts.geojson',
+      layerKey: 'forts',
+      name: 'Fortifications (Simple, PMapping832)',
+      color: '#00ffff',
+      outlineColor: '#00ffff',
+      group: 'main',
+      noOutline: true,
+      fillOpacity: 0,
+      defaultOff: true,
+      smoothFactor: 1.3,
+      pane: 'fortsPane'
     }
   ];
 
@@ -1007,6 +1170,12 @@
         if (layerInfo.noOutline) style.stroke = false;
         return style;
       },
+      pointToLayer: function(feature, latlng) {
+        return L.circleMarker(latlng, {
+          pane: layerInfo.pane, radius: 3,
+          color: layerInfo.color, weight: 1, fillColor: layerInfo.color, fillOpacity: 0.9
+        });
+      },
       onEachFeature: function(feature, featureLayer){
         if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
           featureLayer.on('click', function(e){
@@ -1031,7 +1200,7 @@
       .then(function(data){
         var layer = makeGeoLayer(layerInfo, data);
         mainLayers[layerInfo.name] = layer;
-        layer.addTo(map);
+        if (!layerInfo.defaultOff) layer.addTo(map);
         updateSidebarLayerControl();
       })
       .catch(function(err){ console.warn('Layer load error (' + layerInfo.file + '):', err); });
@@ -1065,7 +1234,7 @@
     });
   }
 
-  /* --- 2D terrain overlay (HypsometricLayer) --- */
+  /* --- 2D terrain overlay --- */
   var ELEV_STOPS = [
     [-5,  70, 170, 210],
     [0,   80, 200, 130],
@@ -1251,6 +1420,28 @@
     if (is3DActive) updateOverlayImage();
   });
 
+  /* --- Snapshot placeholder: lock toggle only (no navigation yet) --- */
+  var snapshotLocked = false;
+  var snapshotLockBtn = document.getElementById('snapshotLockBtn');
+  var snapshotMetaEl = document.getElementById('snapshotMeta');
+  function setSnapshotLocked(locked) {
+    snapshotLocked = !!locked;
+    snapshotLockBtn.classList.toggle('locked', snapshotLocked);
+    snapshotLockBtn.querySelector('.icon-unlocked').style.display = snapshotLocked ? 'none' : 'inline';
+    snapshotLockBtn.querySelector('.icon-locked').style.display = snapshotLocked ? 'inline' : 'none';
+    snapshotLockBtn.title = snapshotLocked
+      ? 'Unlock — clicking again will let the map move freely while browsing snapshots'
+      : 'Lock map position while navigating snapshots';
+    snapshotMetaEl.textContent = snapshotLocked ? 'Locked — map position will hold' : 'Unlocked';
+    try { localStorage.setItem('polradSnapshotLocked_v1', snapshotLocked ? '1' : '0'); } catch (e) {}
+  }
+  snapshotLockBtn.addEventListener('click', function(){ setSnapshotLocked(!snapshotLocked); });
+  try { setSnapshotLocked(localStorage.getItem('polradSnapshotLocked_v1') === '1'); } catch (e) { setSnapshotLocked(false); }
+
+  // Arrows are inert placeholders for now — but they shouldn't throw if clicked.
+  document.getElementById('btnSnapPrev').addEventListener('click', function(){ /* placeholder */ });
+  document.getElementById('btnSnapNext').addEventListener('click', function(){ /* placeholder */ });
+
   /* --- Floating panels --- */
   function closeAllPanels(except) {
     document.querySelectorAll('.floating-panel').forEach(function(p){
@@ -1395,10 +1586,9 @@
   map.on('click', function(e){ if (activeTool === 'ruler') rulerAddPoint(e.latlng); });
   map.on('dblclick', function(e){ if (activeTool === 'ruler') { L.DomEvent.preventDefault(e.originalEvent); redrawRuler(); } });
 
-  /* --- Search --- */
+  /* --- Search (Polrad style: standard Leaflet marker, removable via popup) --- */
   var searchInput = document.getElementById('searchInput');
   var searchResultsEl = document.getElementById('searchResults');
-  var searchClearBtn = document.getElementById('searchClearBtn');
   var searchMarker = null;
   var searchDebounce = null;
   var searchAbort = null;
@@ -1410,28 +1600,32 @@
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
     return { lat: lat, lng: lng };
   }
-  function updateSearchClearBtn() {
-    searchClearBtn.style.display = (searchInput.value || searchMarker) ? 'flex' : 'none';
-  }
   function clearSearchMarker() {
     if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
-    updateSearchClearBtn();
   }
   function escapeHtml(s) {
     return (s || '').replace(/[&<>"']/g, function(c){
       return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
     });
   }
-  function goToResult(lat, lng, label, zoom) {
-    map.setView([lat, lng], zoom || Math.max(map.getZoom(), 12));
+  function showSearchLocation(lat, lng, label) {
+    map.setView([lat, lng], Math.max(map.getZoom(), 10));
     clearSearchMarker();
-    searchMarker = L.circleMarker([lat, lng], {
-      radius: 8, color: '#fff', weight: 2, fillColor: '#ff6a00', fillOpacity: 1, pane: 'markersPane'
-    }).addTo(map).bindPopup(label).openPopup();
-    updateSearchClearBtn();
+    var content = document.createElement('div');
+    var text = document.createElement('div');
+    text.textContent = label;
+    content.appendChild(text);
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'coords-copy-btn';
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = clearSearchMarker;
+    content.appendChild(removeBtn);
+    searchMarker = L.marker([lat, lng]).addTo(map)
+      .bindPopup(content, { closeOnClick: false, autoClose: false })
+      .openPopup();
+    searchMarker.on('popupclose', clearSearchMarker);
     searchResultsEl.style.display = 'none';
-    searchInput.value = label || (lat.toFixed(5) + ', ' + lng.toFixed(5));
-    updateSearchClearBtn();
   }
   function renderSearchResults(items) {
     if (!items.length) { searchResultsEl.style.display = 'none'; searchResultsEl.innerHTML = ''; return; }
@@ -1445,7 +1639,7 @@
     searchResultsEl.querySelectorAll('.search-result').forEach(function(el, i){
       el.addEventListener('click', function(){
         var it = items[i];
-        goToResult(it.lat, it.lng, it.main, it.zoom);
+        showSearchLocation(it.lat, it.lng, it.main);
       });
     });
   }
@@ -1454,9 +1648,7 @@
     if (!q) { searchResultsEl.style.display = 'none'; return; }
     var coordHit = parseLatLngInput(q);
     if (coordHit) {
-      var item = { main: coordHit.lat.toFixed(5) + ', ' + coordHit.lng.toFixed(5), sub: 'Coordinates', lat: coordHit.lat, lng: coordHit.lng, zoom: 15 };
-      if (autoGo) goToResult(item.lat, item.lng, item.main, item.zoom);
-      else renderSearchResults([item]);
+      showSearchLocation(coordHit.lat, coordHit.lng, coordHit.lat.toFixed(5) + ', ' + coordHit.lng.toFixed(5));
       return;
     }
     if (q.length < 3) { searchResultsEl.style.display = 'none'; return; }
@@ -1466,35 +1658,32 @@
       .then(function(r){ return r.json(); })
       .then(function(results){
         var items = results.map(function(r){
-          return { main: r.display_name.split(',')[0], sub: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon), zoom: 13 };
+          return { main: r.display_name.split(',')[0], sub: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
         });
-        if (autoGo) { if (items.length) goToResult(items[0].lat, items[0].lng, items[0].main, items[0].zoom); }
+        if (autoGo) { if (items.length) showSearchLocation(items[0].lat, items[0].lng, items[0].main); }
         else renderSearchResults(items);
       })
       .catch(function(err){ if (err.name !== 'AbortError' && !autoGo) renderSearchResults([]); });
   }
   searchInput.addEventListener('input', function(){
-    updateSearchClearBtn();
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(function(){ runSearch(searchInput.value); }, 350);
   });
   searchInput.addEventListener('keydown', function(e){
     if (e.key === 'Enter') { clearTimeout(searchDebounce); runSearch(searchInput.value, true); }
-    if (e.key === 'Escape') { searchResultsEl.style.display = 'none'; searchInput.blur(); }
+    if (e.key === 'Escape') {
+      searchResultsEl.style.display = 'none';
+      searchInput.blur();
+      document.getElementById('searchPanel').classList.remove('open');
+    }
   });
-  searchClearBtn.addEventListener('click', function(){
-    searchInput.value = '';
-    clearSearchMarker();
-    searchResultsEl.style.display = 'none';
-    searchInput.focus();
+  document.getElementById('searchGo').addEventListener('click', function(){
+    clearTimeout(searchDebounce);
+    runSearch(searchInput.value, true);
   });
   document.addEventListener('click', function(e){
-    if (!e.target.closest('#searchBox')) searchResultsEl.style.display = 'none';
-  });
-
-  document.querySelector('.sidebar-header').addEventListener('click', function(){
-    if (document.documentElement.getAttribute('data-device') === 'mobile') {
-      document.getElementById('sidebar').classList.toggle('expanded');
+    if (!e.target.closest('#searchPanel') && !e.target.closest('.basemap-toggle-btn')) {
+      if (!e.target.closest('#searchPanel')) searchResultsEl.style.display = 'none';
     }
   });
 
