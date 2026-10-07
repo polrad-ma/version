@@ -121,13 +121,10 @@
       border-radius:4px;font-size:11px;padding:4px 6px;font-family:inherit;width:100%;cursor:pointer;
     }
 
-    /* Snapshot panel — one element, two placements.
-       - .snapshot-in-sidebar (default): renders as a normal section inside #sidebar.
-       - .snapshot-in-bar: fixed bottom-center bar on the map, shown while the
-         sidebar is collapsed. Same DOM, so lock state survives the transition. */
+    /* Snapshot panel — one element, two placements. */
     #snapshotPanel{ display:none; }
 
-    /* Sidebar placement */
+    /* Sidebar placement (default, while the sidebar is expanded). */
     #snapshotPanel.snapshot-in-sidebar{
       display:block;
       padding:10px 12px;
@@ -135,27 +132,16 @@
     }
     #snapshotPanel.snapshot-in-sidebar .snapshot-title{ display:block; }
 
-    /* Bottom-bar placement */
-    #snapshotPanel.snapshot-in-bar{
-      display:flex;
-      position:fixed;
-      bottom:18px;
-      left:50%;
-      transform:translateX(-50%);
-      z-index:1250;
-      width:min(560px,calc(100vw - 40px));
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:12px;
-      box-shadow:0 6px 24px #0009, 0 0 0 1px #ffffff08 inset;
-      padding:10px 12px;
-      flex-direction:column;
-      gap:8px;
+    #snapshotPanel.snapshot-in-sidebar #snapshotDescBox{
+      background:#1a1f2b;border:2px solid #2d5aed;border-radius:10px;padding:14px 16px;
+      min-height:120px;color:#6b8cff;font-family:ui-monospace,Consolas,monospace;
+      font-size:15px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;
     }
-    :root[data-theme="light"] #snapshotPanel.snapshot-in-bar{
-      box-shadow:0 6px 24px #1a1e2933, 0 0 0 1px #00000008 inset;
-    }
-    #snapshotPanel.snapshot-in-bar .snapshot-title{ display:block; }
+    :root[data-theme="light"] #snapshotPanel.snapshot-in-sidebar #snapshotDescBox{background:#eef3ff;color:#2d5aed;}
+    #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-placeholder{color:#6b8cff;opacity:.85;}
+    :root[data-theme="light"] #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-placeholder{color:#2d5aed;}
+    #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-meta{display:block;color:#8ba7ff;font-size:11px;margin-top:8px;opacity:.7;}
+    :root[data-theme="light"] #snapshotPanel.snapshot-in-sidebar #snapshotDescBox .snapshot-meta{color:#4a72c9;}
 
     .snapshot-title{
       font-size:11px;
@@ -164,18 +150,6 @@
       color:var(--sub);
       margin:0 0 8px;
     }
-    #snapshotPanel.snapshot-in-bar .snapshot-title{ margin:0; }
-
-    #snapshotDescBox{
-      background:#1a1f2b;border:2px solid #2d5aed;border-radius:10px;padding:12px 14px;
-      min-height:80px;color:#6b8cff;font-family:ui-monospace,Consolas,monospace;
-      font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;
-    }
-    :root[data-theme="light"] #snapshotDescBox{background:#eef3ff;color:#2d5aed;}
-    #snapshotDescBox .snapshot-placeholder{color:#6b8cff;opacity:.85;}
-    :root[data-theme="light"] #snapshotDescBox .snapshot-placeholder{color:#2d5aed;}
-    #snapshotDescBox .snapshot-meta{display:block;color:#8ba7ff;font-size:11px;margin-top:6px;opacity:.7;}
-    :root[data-theme="light"] #snapshotDescBox .snapshot-meta{color:#4a72c9;}
 
     #snapshotNavRow{
       display:flex;
@@ -183,7 +157,6 @@
       align-items:stretch;
       margin-top:8px;
     }
-    #snapshotPanel.snapshot-in-bar #snapshotNavRow{ margin-top:0; }
 
     .snapshot-nav-btn{
       flex:1;
@@ -199,8 +172,7 @@
     .snapshot-nav-btn:hover{background:#2d5aed22;border-color:#3f6fff;color:#3f6fff;}
     .snapshot-nav-btn svg{width:26px;height:26px;}
 
-    /* Lock button — centered between the two arrows. Glows with a soft pulse
-       when the locked mode is active. */
+    /* Lock button — centered between the two arrows. */
     #snapshotLockBtn{
       flex:0 0 60px;
       background:transparent;
@@ -235,9 +207,143 @@
     #snapshotMeta{
       font-size:10.5px;color:var(--sub);text-align:center;letter-spacing:.02em;margin-top:6px;
     }
-    #snapshotPanel.snapshot-in-bar #snapshotMeta{ margin-top:0; }
 
-    /* Collapsed-state bar is hidden while the sidebar is expanded. */
+    /* =====================================================================
+       Bottom-bar placement — the single horizontal strip, styled like the
+       original Polrad advance-bar but in this map's own theme.
+       ===================================================================== */
+    #snapshotPanel.snapshot-in-bar{
+      display:flex;
+      position:fixed;
+      bottom:18px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:1250;
+      width:min(920px,calc(100% - 100px));
+      min-height:42px;
+      align-items:center;
+      gap:8px;
+      padding:5px 8px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:9px;
+      box-shadow:0 6px 24px #0009;
+      flex-direction:row;
+      flex-wrap:nowrap;
+    }
+    :root[data-theme="light"] #snapshotPanel.snapshot-in-bar{
+      box-shadow:0 6px 24px #1a1e2933;
+    }
+    /* The panel title is redundant in the bar; the description strip carries it. */
+    #snapshotPanel.snapshot-in-bar .snapshot-title{ display:none; }
+    /* Description box becomes the flexible middle strip: flat, single-line,
+       ellipsised if too long — the Polrad advance-text treatment. */
+    #snapshotPanel.snapshot-in-bar #snapshotDescBox{
+      flex:1;
+      min-width:0;
+      min-height:0;
+      max-height:32px;
+      padding:0 10px;
+      background:transparent;
+      border:none;
+      border-radius:0;
+      color:var(--text);
+      font-family:inherit;
+      font-size:13px;
+      line-height:32px;
+      display:flex;
+      align-items:center;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotDescBox .snapshot-placeholder{
+      color:var(--sub);
+      opacity:1;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotDescBox .snapshot-meta{
+      display:inline;
+      color:var(--sub);
+      font-size:12px;
+      margin-top:0;
+      margin-left:10px;
+      opacity:.75;
+      font-weight:700;
+      flex:0 0 auto;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotNavRow{
+      flex:0 0 auto;
+      margin:0;
+      gap:6px;
+      align-items:center;
+      display:flex;
+    }
+    /* Arrows shrink to advance-bar proportions. */
+    #snapshotPanel.snapshot-in-bar .snapshot-nav-btn{
+      flex:0 0 32px;
+      width:32px;
+      height:32px;
+      min-height:0;
+      padding:0;
+      border-radius:6px;
+      border:1px solid var(--border);
+      background:var(--panel2);
+      color:var(--text);
+      font-size:22px;
+    }
+    #snapshotPanel.snapshot-in-bar .snapshot-nav-btn:hover{
+      background:var(--panel3);
+      border-color:var(--accent-hover);
+    }
+    #snapshotPanel.snapshot-in-bar .snapshot-nav-btn svg{ width:20px; height:20px; }
+    /* Lock in the bar likewise shrinks and stops pulsing — a steady glow reads
+       as "active" without the pulse being distracting at this size. */
+    #snapshotPanel.snapshot-in-bar #snapshotLockBtn{
+      flex:0 0 32px;
+      width:32px;
+      height:32px;
+      min-height:0;
+      border-radius:6px;
+      border:1px solid var(--border);
+      background:var(--panel2);
+      color:var(--text);
+      box-shadow:none;
+      animation:none;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotLockBtn:hover{
+      background:var(--panel3);
+      border-color:var(--accent-hover);
+      box-shadow:none;
+      animation:none;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotLockBtn.locked{
+      background:var(--accent);
+      border-color:var(--accent);
+      color:#fff;
+      box-shadow:0 0 0 2px var(--accent-soft), 0 0 12px 1px var(--accent-hover);
+      animation:none;
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotLockBtn.locked:hover{
+      background:var(--accent-hover);
+      border-color:var(--accent-hover);
+      box-shadow:0 0 0 2px var(--accent-soft), 0 0 14px 2px var(--accent-hover);
+    }
+    #snapshotPanel.snapshot-in-bar #snapshotLockBtn svg{ width:16px; height:16px; }
+    /* Meta line lands at the end of the strip as the "· Unlocked / · Locked" chip. */
+    #snapshotPanel.snapshot-in-bar #snapshotMeta{
+      display:block;
+      flex:0 0 auto;
+      margin:0 0 0 4px;
+      font-size:10.5px;
+      color:var(--sub);
+      white-space:nowrap;
+    }
+
+    /* Collapsed-state bar visibility. */
     :root:not([data-device="mobile"]) body.sidebar-collapsed #snapshotPanel.snapshot-in-bar{ display:flex; }
     :root:not([data-device="mobile"]) body:not(.sidebar-collapsed) #snapshotPanel.snapshot-in-bar{ display:none; }
     :root[data-device="mobile"] body:not(.sidebar-expanded) #snapshotPanel.snapshot-in-bar{ display:flex; }
@@ -422,7 +528,6 @@
     :root[data-device="mobile"] #searchPanel{
       right:12px; left:12px; top:64px; width:auto;
     }
-    /* Bottom-bar placement on mobile is handled by the body-class rules above. */
     :root[data-device="mobile"] #snapshotPanel.snapshot-in-bar{
       width:calc(100vw - 24px);
       bottom:12px;
@@ -486,8 +591,6 @@
       </div>
     </div>
 
-    <!-- The snapshot panel element lives here in the DOM (inside the sidebar)
-         by default. JS toggles its placement class to move it into the bottom bar. -->
     <div id="snapshotPanel" class="snapshot-in-sidebar">
       <div class="snapshot-title">Snapshots</div>
       <div id="snapshotDescBox">
@@ -519,7 +622,6 @@
 
 </div>
 
-<!-- Search dropdown panel (top-right, opens under the search toggle button) -->
 <div id="searchPanel">
   <div id="searchRow">
     <input id="searchInput" type="text" placeholder="Search place or coordinates…" autocomplete="off">
@@ -636,7 +738,6 @@
   }).addTo(map);
 
   map.createPane('terrainPane');
-  // Terrain BELOW the political layers, so russia/grayzone read on top of the tint.
   map.getPane('terrainPane').style.zIndex = 400;
   map.createPane('territoryPane');
   map.getPane('territoryPane').style.zIndex = 420;
@@ -727,8 +828,7 @@
     openCoordPopupAt(map.getCenter());
   });
 
-  /* --- Sidebar collapse / expand, with class markers on <body> so CSS can
-     drive the snapshot panel's placement without JS touching the DOM. */
+  /* --- Sidebar collapse / expand --- */
   function setSidebarCollapsed(collapsed){
     var sidebar = document.getElementById('sidebar');
     var isMobile = document.documentElement.getAttribute('data-device') === 'mobile';
@@ -772,7 +872,6 @@
   });
   map.addControl(new SidebarToggleControl());
 
-  // 3D toggle.
   var is3DActive = false;
   var map3DGL = null, map3DReady = false, pendingShow3D = false, overlaySyncArmed = false;
   var map3DContainerEl = document.getElementById('map3d');
@@ -797,7 +896,6 @@
 
   document.getElementById('mapWrap').appendChild(map._controlContainer);
 
-  /* --- AWS Terrarium despeckling protocol for MapLibre 3D --- */
   var TERRAIN_GLOBAL_MIN = -100, TERRAIN_GLOBAL_MAX = 600, TERRAIN_LOCAL_DEVIATION = 30;
   var terrainTileCache = new Map();
   maplibregl.addProtocol('ukwarmap-terrain', async function(params) {
@@ -1086,7 +1184,6 @@
   });
   map.addControl(new DeviceControl());
 
-  /* --- Search control (top-right, dropdown panel) --- */
   var SearchToggleControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -1140,11 +1237,12 @@
       color: '#00ffff',
       outlineColor: '#00ffff',
       group: 'main',
-      noOutline: true,
+      noOutline: false,
       fillOpacity: 0,
       defaultOff: true,
       smoothFactor: 1.3,
-      pane: 'fortsPane'
+      pane: 'fortsPane',
+      weight: 1.8
     }
   ];
 
@@ -1163,7 +1261,7 @@
       style: function(){
         var style = {
           color: layerInfo.outlineColor || layerInfo.color,
-          weight: 2,
+          weight: layerInfo.weight !== undefined ? layerInfo.weight : 2,
           fillColor: layerInfo.color,
           fillOpacity: layerInfo.fillOpacity !== undefined ? layerInfo.fillOpacity : 0.4
         };
@@ -1420,7 +1518,7 @@
     if (is3DActive) updateOverlayImage();
   });
 
-  /* --- Snapshot placeholder: lock toggle only (no navigation yet) --- */
+  /* --- Snapshot placeholder: lock toggle only --- */
   var snapshotLocked = false;
   var snapshotLockBtn = document.getElementById('snapshotLockBtn');
   var snapshotMetaEl = document.getElementById('snapshotMeta');
@@ -1432,13 +1530,12 @@
     snapshotLockBtn.title = snapshotLocked
       ? 'Unlock — clicking again will let the map move freely while browsing snapshots'
       : 'Lock map position while navigating snapshots';
-    snapshotMetaEl.textContent = snapshotLocked ? 'Locked — map position will hold' : 'Unlocked';
+    snapshotMetaEl.textContent = snapshotLocked ? 'Locked' : 'Unlocked';
     try { localStorage.setItem('polradSnapshotLocked_v1', snapshotLocked ? '1' : '0'); } catch (e) {}
   }
   snapshotLockBtn.addEventListener('click', function(){ setSnapshotLocked(!snapshotLocked); });
   try { setSnapshotLocked(localStorage.getItem('polradSnapshotLocked_v1') === '1'); } catch (e) { setSnapshotLocked(false); }
 
-  // Arrows are inert placeholders for now — but they shouldn't throw if clicked.
   document.getElementById('btnSnapPrev').addEventListener('click', function(){ /* placeholder */ });
   document.getElementById('btnSnapNext').addEventListener('click', function(){ /* placeholder */ });
 
@@ -1586,7 +1683,7 @@
   map.on('click', function(e){ if (activeTool === 'ruler') rulerAddPoint(e.latlng); });
   map.on('dblclick', function(e){ if (activeTool === 'ruler') { L.DomEvent.preventDefault(e.originalEvent); redrawRuler(); } });
 
-  /* --- Search (Polrad style: standard Leaflet marker, removable via popup) --- */
+  /* --- Search --- */
   var searchInput = document.getElementById('searchInput');
   var searchResultsEl = document.getElementById('searchResults');
   var searchMarker = null;
