@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://server.arcgisonline.com">
+  <link rel="preconnect" href="https://tiles.maps.eox.at">
   <link rel="preconnect" href="https://s3.amazonaws.com">
 
   <script>
@@ -358,7 +359,7 @@
       margin:0 0 8px;
     }
 
-    /* ===================== SITUATION (summary section) ===================== */
+    /* ===================== SITUATION ===================== */
     #summaryPanel{
       padding:10px 12px;
       border-bottom:1px solid var(--border);
@@ -857,6 +858,7 @@
       summaryMonthStart: "Since month start",
       summaryUpdated: "Updated",
       noEdits: "no edits",
+      labelsToggle: "Labels",
       instructions: {
         polygon: "Click points to trace a shape, then click 'Finish shape'.",
         freehand: "Click and drag on the map to draw freely.",
@@ -939,6 +941,7 @@
       summaryMonthStart: "С начала месяца",
       summaryUpdated: "Обновлено",
       noEdits: "нет изменений",
+      labelsToggle: "Подписи",
       instructions: {
         polygon: "Нажимайте точки, чтобы обвести фигуру, затем нажмите «Завершить фигуру».",
         freehand: "Зажмите кнопку мыши и рисуйте свободно.",
@@ -1025,14 +1028,32 @@
       { attribution: 'Labels &copy; Esri', maxZoom: 19 }
     )
   ]);
+
   var esriSat = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     { attribution: 'Tiles &copy; Esri', maxZoom: 19 }
   );
 
+  // EOX Sentinel-2 cloudless — free, non-commercial annual mosaic.
+  // Latest available: 2024. Non-commercial license, attribution required.
+  var eoxSentinel2 = L.tileLayer(
+    'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg',
+    {
+      attribution: 'Sentinel-2 cloudless - <a href="https://s2maps.eu" target="_blank" rel="noopener">https://s2maps.eu</a> by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)',
+      maxZoom: 18
+    }
+  );
+
+  // Separate label-only overlay — can sit on top of any basemap.
+  var labelsOverlay = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    { attribution: 'Labels &copy; Esri', maxZoom: 19 }
+  );
+
   var baseLayers = {
     'esriHybrid': { label: 'Esri Hybrid', layer: esriHybrid },
-    'esriSat':    { label: 'Esri Satellite', layer: esriSat }
+    'esriSat':    { label: 'Esri Satellite', layer: esriSat },
+    'eoxSentinel': { label: 'Sentinel-2 Cloudless', layer: eoxSentinel2 }
   };
   var currentBasemapKey = 'esriHybrid';
 
@@ -1262,7 +1283,8 @@
 
   var basemaps3D = {
     esriHybrid: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-    esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}']
+    esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    eoxSentinel: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg']
   };
   var ESRI_LABELS_3D = ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'];
 
@@ -1308,7 +1330,8 @@
     ['esriImageryLayer', 'esriImageryLayer2'].forEach(function(id){ if (map3DGL.getLayer(id)) map3DGL.removeLayer(id); });
     ['esriImagery', 'esriImagery2'].forEach(function(id){ if (map3DGL.getSource(id)) map3DGL.removeSource(id); });
     var beforeId = map3DGL.getLayer('leafletOverlayLayer') ? 'leafletOverlayLayer' : undefined;
-    map3DGL.addSource('esriImagery', { type: 'raster', tiles: basemaps3D[key], tileSize: 256, maxzoom: 19 });
+    var tiles = basemaps3D[key] || basemaps3D.esriHybrid;
+    map3DGL.addSource('esriImagery', { type: 'raster', tiles: tiles, tileSize: 256, maxzoom: 19 });
     map3DGL.addLayer({ id: 'esriImageryLayer', type: 'raster', source: 'esriImagery' }, beforeId);
     if (key === 'esriHybrid') {
       map3DGL.addSource('esriImagery2', { type: 'raster', tiles: ESRI_LABELS_3D, tileSize: 256, maxzoom: 19 });
@@ -1637,10 +1660,7 @@
         updateSidebarLayerControl();
       })
       .catch(function(err){
-        if (layerInfo.optional) {
-          // Silently skip optional layers whose file doesn't exist yet.
-          return;
-        }
+        if (layerInfo.optional) return;
         console.warn('Layer load error (' + layerInfo.file + '):', err);
       });
   });
@@ -1650,7 +1670,6 @@
     if (!container) return;
     container.innerHTML = '';
 
-    // Flat list — order matches layerFiles array.
     Object.keys(mainLayers).forEach(function(name){
       var layer = mainLayers[name];
       var row = document.createElement('div');
@@ -1674,19 +1693,6 @@
       row.appendChild(lbl);
       container.appendChild(row);
     });
-
-    // "My Drawings" appended at the bottom — not a togglable layer, just a
-    // note that the user's local sketches sit on top of everything else.
-    if (userDrawings && userDrawings.getLayers().length) {
-      var row = document.createElement('div');
-      row.className = 'overlay-row';
-      var lbl = document.createElement('label');
-      lbl.style.paddingLeft = '22px';
-      lbl.style.color = 'var(--sub)';
-      lbl.textContent = 'My Drawings';
-      row.appendChild(lbl);
-      container.appendChild(row);
-    }
   }
 
   /* ===================== TERRAIN ===================== */
@@ -1875,6 +1881,34 @@
     if (is3DActive) updateOverlayImage();
   });
 
+  /* ---- Labels toggle ---- */
+  var LABELS_STORAGE_KEY = 'polradLabels_v1';
+  var labelsEnabled = false;
+  try { labelsEnabled = localStorage.getItem(LABELS_STORAGE_KEY) === '1'; } catch (e) {}
+  if (labelsEnabled) labelsOverlay.addTo(map);
+
+  var LabelsControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.id = 'btnLabelsToggle';
+      btn.title = t('labelsToggle');
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h6"/></svg>';
+      if (labelsEnabled) btn.classList.add('active-toggle');
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', function(){
+        labelsEnabled = !labelsEnabled;
+        btn.classList.toggle('active-toggle', labelsEnabled);
+        if (labelsEnabled) labelsOverlay.addTo(map);
+        else map.removeLayer(labelsOverlay);
+        try { localStorage.setItem(LABELS_STORAGE_KEY, labelsEnabled ? '1' : '0'); } catch (e) {}
+      });
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
+  });
+  map.addControl(new LabelsControl());
+
   /* ===================== ADVANCES + SUMMARY ===================== */
   var ADVANCES_URL = LIVE_ROOT + 'advances.json';
   var advances = [];
@@ -1954,9 +1988,6 @@
     btnAdvNext.disabled = advIndex >= advances.length - 1;
   }
 
-  // ---- Situation summary ----
-  // Sum signed areaChange per side, then net = ru - ua.
-  // Positive net -> Russian gained, negative net -> Ukrainian gained.
   function netOfEntries(entries) {
     var ruNet = 0, uaNet = 0;
     entries.forEach(function(item){
@@ -1997,13 +2028,12 @@
       return;
     }
 
-    // Most recent date across all advances.
     var newestDate = advances[advances.length - 1].date;
     if (!newestDate) {
       summaryUpdatedDate.textContent = '—';
       return;
     }
-    var monthPrefix = newestDate.slice(0, 7); // "YYYY-MM"
+    var monthPrefix = newestDate.slice(0, 7);
 
     var lastDayEntries = advances.filter(function(a){ return a.date === newestDate; });
     var monthEntries = advances.filter(function(a){
@@ -2467,7 +2497,6 @@
     }
     if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
     drawingPoints = [];
-    updateSidebarLayerControl();
     if (is3DActive) updateOverlayImage();
   });
 
@@ -2519,7 +2548,6 @@
         userDrawings.addLayer(rect);
         if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
         drawingPoints = [];
-        updateSidebarLayerControl();
         if (is3DActive) updateOverlayImage();
       }
       return;
@@ -2530,7 +2558,6 @@
       var flagMarker = L.marker(e.latlng, { icon: flagIcon }).bindPopup(flagLabel);
       attachEraser(flagMarker);
       userDrawings.addLayer(flagMarker);
-      updateSidebarLayerControl();
       return;
     }
     if (activeTool === 'arrow' || activeTool === 'dashed-arrow') {
@@ -2540,7 +2567,6 @@
         addArrow(drawingPoints[0], e.latlng, currentColor, currentThickness, activeTool === 'dashed-arrow');
         if (previewLayer) { map.removeLayer(previewLayer); previewLayer = null; }
         drawingPoints = [];
-        updateSidebarLayerControl();
         if (is3DActive) updateOverlayImage();
       }
     }
@@ -2616,14 +2642,12 @@
       userDrawings.addLayer(line);
     }
     resetDrawingState();
-    updateSidebarLayerControl();
     if (is3DActive) updateOverlayImage();
   }
   function clearDrawings() {
     userDrawings.clearLayers();
     resetDrawingState();
     document.getElementById('draw-result').innerText = t('selectShape');
-    updateSidebarLayerControl();
     if (is3DActive) updateOverlayImage();
   }
 
