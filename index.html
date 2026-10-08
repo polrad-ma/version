@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://server.arcgisonline.com">
   <link rel="preconnect" href="https://tiles.maps.eox.at">
-  <link rel="preconnect" href="https://tiles.openfreemap.org">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
   <link rel="preconnect" href="https://s3.amazonaws.com">
 
   <script>
@@ -1024,8 +1024,17 @@
     { attribution: 'Tiles &copy; Esri', maxZoom: 19 }
   );
 
-  // EOX Sentinel-2 cloudless — free, non-commercial annual mosaic.
-  // Latest available: 2024.
+  var esriHybrid = L.layerGroup([
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Tiles &copy; Esri', maxZoom: 19 }
+    ),
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Labels &copy; Esri', maxZoom: 19 }
+    )
+  ]);
+
   var eoxSentinel2 = L.tileLayer(
     'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg',
     {
@@ -1036,6 +1045,7 @@
 
   var baseLayers = {
     'esriSat':    { label: 'Esri Satellite', layer: esriSat },
+    'esriHybrid': { label: 'Esri Hybrid', layer: esriHybrid },
     'eoxSentinel': { label: 'Sentinel-2 Cloudless', layer: eoxSentinel2 }
   };
   var currentBasemapKey = 'esriSat';
@@ -1266,6 +1276,7 @@
 
   var basemaps3D = {
     esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    esriHybrid: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     eoxSentinel: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg']
   };
   var ESRI_LABELS_3D = ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'];
@@ -1863,42 +1874,34 @@
     if (is3DActive) updateOverlayImage();
   });
 
-  /* ---- OpenFreeMap labels overlay ---- */
-  // OpenFreeMap provides vector tiles and requires MapLibre GL to render.
-  // We load it as a Leaflet layer using the maplibre-gl-leaflet plugin,
-  // with a custom pane so it sits above the raster basemap but below
-  // markers and popups.
+  /* ---- OpenStreetMap English labels overlay ---- */
+  // This is the standard OSM tile layer with all labels baked in (English).
+  // It sits on top of the satellite base, giving you the "satellite + labels"
+  // combination without any API key.
   var LABELS_STORAGE_KEY = 'polradLabels_v1';
   var labelsEnabled = true;
   try { labelsEnabled = localStorage.getItem(LABELS_STORAGE_KEY) !== '0'; } catch (e) {}
 
-  map.createPane('ofmLabelsPane');
-  map.getPane('ofmLabelsPane').style.zIndex = 550;
-  map.getPane('ofmLabelsPane').style.pointerEvents = 'none';
-
-  var ofmLabelsLayer = null;
-
-  function ensureOpenFreeMapLabels() {
-    if (ofmLabelsLayer) return;
-    if (typeof L.maplibreGL !== 'function') return;
-    ofmLabelsLayer = L.maplibreGL({
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-      pane: 'ofmLabelsPane',
-      interactive: false
-    });
-  }
+  // We use the standard OSM raster tiles as the label overlay.
+  // The tiles have transparent backgrounds where there's no label content.
+  var osmLabelsOverlay = L.tileLayer(
+    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+      opacity: 1
+    }
+  );
 
   function setLabelsEnabled(on) {
     labelsEnabled = !!on;
     try { localStorage.setItem(LABELS_STORAGE_KEY, labelsEnabled ? '1' : '0'); } catch (e) {}
     var btn = document.getElementById('btnLabelsToggle');
     if (btn) btn.classList.toggle('active-toggle', labelsEnabled);
-
     if (labelsEnabled) {
-      ensureOpenFreeMapLabels();
-      if (ofmLabelsLayer && !map.hasLayer(ofmLabelsLayer)) ofmLabelsLayer.addTo(map);
+      if (!map.hasLayer(osmLabelsOverlay)) osmLabelsOverlay.addTo(map);
     } else {
-      if (ofmLabelsLayer && map.hasLayer(ofmLabelsLayer)) map.removeLayer(ofmLabelsLayer);
+      if (map.hasLayer(osmLabelsOverlay)) map.removeLayer(osmLabelsOverlay);
     }
   }
 
