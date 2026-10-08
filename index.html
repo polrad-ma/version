@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://server.arcgisonline.com">
   <link rel="preconnect" href="https://tiles.maps.eox.at">
+  <link rel="preconnect" href="https://tiles.openfreemap.org">
   <link rel="preconnect" href="https://s3.amazonaws.com">
 
   <script>
@@ -1018,24 +1019,13 @@
   /* ===================== MAP ===================== */
   var LIVE_ROOT = 'https://raw.githubusercontent.com/polrad-ma/version/main/';
 
-  var esriHybrid = L.layerGroup([
-    L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { attribution: 'Tiles &copy; Esri', crossOrigin: true, maxZoom: 19 }
-    ),
-    L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-      { attribution: 'Labels &copy; Esri', maxZoom: 19 }
-    )
-  ]);
-
   var esriSat = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     { attribution: 'Tiles &copy; Esri', maxZoom: 19 }
   );
 
   // EOX Sentinel-2 cloudless — free, non-commercial annual mosaic.
-  // Latest available: 2024. Non-commercial license, attribution required.
+  // Latest available: 2024.
   var eoxSentinel2 = L.tileLayer(
     'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg',
     {
@@ -1044,18 +1034,11 @@
     }
   );
 
-  // Separate label-only overlay — can sit on top of any basemap.
-  var labelsOverlay = L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    { attribution: 'Labels &copy; Esri', maxZoom: 19 }
-  );
-
   var baseLayers = {
-    'esriHybrid': { label: 'Esri Hybrid', layer: esriHybrid },
     'esriSat':    { label: 'Esri Satellite', layer: esriSat },
     'eoxSentinel': { label: 'Sentinel-2 Cloudless', layer: eoxSentinel2 }
   };
-  var currentBasemapKey = 'esriHybrid';
+  var currentBasemapKey = 'esriSat';
 
   var map = L.map('map', {
     center: [48.00, 37.75],
@@ -1282,7 +1265,6 @@
   });
 
   var basemaps3D = {
-    esriHybrid: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     eoxSentinel: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg']
   };
@@ -1330,7 +1312,7 @@
     ['esriImageryLayer', 'esriImageryLayer2'].forEach(function(id){ if (map3DGL.getLayer(id)) map3DGL.removeLayer(id); });
     ['esriImagery', 'esriImagery2'].forEach(function(id){ if (map3DGL.getSource(id)) map3DGL.removeSource(id); });
     var beforeId = map3DGL.getLayer('leafletOverlayLayer') ? 'leafletOverlayLayer' : undefined;
-    var tiles = basemaps3D[key] || basemaps3D.esriHybrid;
+    var tiles = basemaps3D[key] || basemaps3D.esriSat;
     map3DGL.addSource('esriImagery', { type: 'raster', tiles: tiles, tileSize: 256, maxzoom: 19 });
     map3DGL.addLayer({ id: 'esriImageryLayer', type: 'raster', source: 'esriImagery' }, beforeId);
     if (key === 'esriHybrid') {
@@ -1881,11 +1863,44 @@
     if (is3DActive) updateOverlayImage();
   });
 
-  /* ---- Labels toggle ---- */
+  /* ---- OpenFreeMap labels overlay ---- */
+  // OpenFreeMap provides vector tiles and requires MapLibre GL to render.
+  // We load it as a Leaflet layer using the maplibre-gl-leaflet plugin,
+  // with a custom pane so it sits above the raster basemap but below
+  // markers and popups.
   var LABELS_STORAGE_KEY = 'polradLabels_v1';
-  var labelsEnabled = false;
-  try { labelsEnabled = localStorage.getItem(LABELS_STORAGE_KEY) === '1'; } catch (e) {}
-  if (labelsEnabled) labelsOverlay.addTo(map);
+  var labelsEnabled = true;
+  try { labelsEnabled = localStorage.getItem(LABELS_STORAGE_KEY) !== '0'; } catch (e) {}
+
+  map.createPane('ofmLabelsPane');
+  map.getPane('ofmLabelsPane').style.zIndex = 550;
+  map.getPane('ofmLabelsPane').style.pointerEvents = 'none';
+
+  var ofmLabelsLayer = null;
+
+  function ensureOpenFreeMapLabels() {
+    if (ofmLabelsLayer) return;
+    if (typeof L.maplibreGL !== 'function') return;
+    ofmLabelsLayer = L.maplibreGL({
+      style: 'https://tiles.openfreemap.org/styles/liberty',
+      pane: 'ofmLabelsPane',
+      interactive: false
+    });
+  }
+
+  function setLabelsEnabled(on) {
+    labelsEnabled = !!on;
+    try { localStorage.setItem(LABELS_STORAGE_KEY, labelsEnabled ? '1' : '0'); } catch (e) {}
+    var btn = document.getElementById('btnLabelsToggle');
+    if (btn) btn.classList.toggle('active-toggle', labelsEnabled);
+
+    if (labelsEnabled) {
+      ensureOpenFreeMapLabels();
+      if (ofmLabelsLayer && !map.hasLayer(ofmLabelsLayer)) ofmLabelsLayer.addTo(map);
+    } else {
+      if (ofmLabelsLayer && map.hasLayer(ofmLabelsLayer)) map.removeLayer(ofmLabelsLayer);
+    }
+  }
 
   var LabelsControl = L.Control.extend({
     options: { position: 'topright' },
@@ -1894,14 +1909,9 @@
       btn.id = 'btnLabelsToggle';
       btn.title = t('labelsToggle');
       btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h6"/></svg>';
-      if (labelsEnabled) btn.classList.add('active-toggle');
       L.DomEvent.on(btn, 'click', L.DomEvent.stop);
       L.DomEvent.on(btn, 'click', function(){
-        labelsEnabled = !labelsEnabled;
-        btn.classList.toggle('active-toggle', labelsEnabled);
-        if (labelsEnabled) labelsOverlay.addTo(map);
-        else map.removeLayer(labelsOverlay);
-        try { localStorage.setItem(LABELS_STORAGE_KEY, labelsEnabled ? '1' : '0'); } catch (e) {}
+        setLabelsEnabled(!labelsEnabled);
       });
       L.DomEvent.disableClickPropagation(btn);
       return btn;
@@ -2653,6 +2663,7 @@
 
   /* ===================== BOOT ===================== */
   applyLanguage();
+  setLabelsEnabled(labelsEnabled);
 
 </script>
 
