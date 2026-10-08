@@ -77,7 +77,7 @@
     #crosshair.active{display:block;}
     .ch-line{position:absolute;background:var(--text);opacity:.6;box-shadow:0 0 2px #0008;}
     .ch-h{width:30px;height:1.5px;top:0;left:-15px;}
-    .ch-v{width:1.5px;height:30px;top:0;left:0;}
+    .ch-v{width:1.5px;height:30px;top:-15px;left:0;}
     .ch-hotspot{
       position:absolute;top:-20px;left:-20px;width:40px;height:40px;border-radius:50%;
       pointer-events:auto;cursor:pointer;background:transparent;transition:background .12s;
@@ -594,7 +594,6 @@
     body.screenshot-mode .legend-control {
       visibility: hidden !important;
     }
-    /* Corner label — visible ONLY during screenshot mode */
     #screenshotCornerLabel {
       position: absolute;
       top: 16px;
@@ -611,6 +610,33 @@
       user-select: none;
     }
     body.screenshot-mode #screenshotCornerLabel { display: block; }
+
+    :root[data-device="mobile"] #sidebar{
+      position:fixed; left:0; right:0; bottom:0; top:auto; width:100%; min-width:0;
+      max-height:75vh; max-height:75dvh; border-left:none; border-top:1px solid var(--border);
+      border-radius:14px 14px 0 0; box-shadow:0 -6px 24px #0008;
+      transform:translateY(calc(100% - 56px)); transition:transform .25s ease;
+      z-index:1300;
+    }
+    :root[data-device="mobile"] #sidebar.expanded{ transform:translateY(0); }
+    :root[data-device="mobile"] .sidebar-header{ cursor:pointer; position:relative; padding-right:40px; }
+    :root[data-device="mobile"] .sidebar-header::after{
+      content:''; position:absolute; right:18px; top:50%; width:28px; height:3px;
+      background:var(--sub); border-radius:2px; transform:translateY(-50%);
+    }
+    :root[data-device="mobile"] .basemap-toggle-btn{ width:42px; height:42px; }
+    :root[data-device="mobile"] button{ padding:9px 12px; font-size:13px; min-height:38px; }
+    :root[data-device="mobile"] .floating-panel{
+      left:12px; right:12px; top:auto; bottom:80px; width:auto; max-height:60vh;
+    }
+    :root[data-device="mobile"] #rulerPanel{
+      left:12px; right:12px; top:auto; bottom:80px; width:auto;
+    }
+    :root[data-device="mobile"] #searchBox{ width:calc(100vw - 120px); }
+    :root[data-device="mobile"] #advancePanel.advance-in-bar{
+      width:calc(100vw - 24px);
+      bottom:12px;
+    }
   </style>
 </head>
 
@@ -1600,7 +1626,6 @@
       outlineColor: '#ffffff',
       noOutline: false,
       fillOpacity: 0,
-      defaultOff: true,
       smoothFactor: 2.2,
       pane: 'townsPane',
       weight: 1.2
@@ -1679,7 +1704,7 @@
       .bindPopup('<b>' + city.name + '</b><br>Captured ' + city.date)
       .addTo(cityMarkers);
   });
-  cityMarkers.addTo(map);
+  // Not added to the map — cities are off by default. Toggle in the Layers section.
   extraLayers['cities'] = cityMarkers;
 
   function fetchGeoJSON(url) {
@@ -1801,10 +1826,8 @@
 
     var mapEl = document.getElementById('mapWrap');
 
-    // Enter screenshot mode — hide UI chrome and show corner label
     document.body.classList.add('screenshot-mode');
 
-    // Give the browser a frame to apply the CSS
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
         html2canvas(mapEl, {
@@ -1814,13 +1837,10 @@
           scale: window.devicePixelRatio || 1,
           logging: false,
           ignoreElements: function(el){
-            // Ignore Leaflet controls (they're hidden via CSS anyway, but belt-and-suspenders)
             if (el.classList && el.classList.contains('leaflet-control-container')) return true;
             return false;
           }
         }).then(function(canvas){
-          // Draw the corner label directly onto the canvas (in case CSS
-          // visibility tricks didn't apply in html2canvas's snapshot)
           var ctx = canvas.getContext('2d');
           var scale = window.devicePixelRatio || 1;
           var pad = 16 * scale;
