@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://server.arcgisonline.com">
   <link rel="preconnect" href="https://tiles.maps.eox.at">
-  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="preconnect" href="https://raw.githubusercontent.com">
   <link rel="preconnect" href="https://s3.amazonaws.com">
 
   <script>
@@ -42,6 +42,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
     :root{
@@ -76,7 +77,7 @@
     #crosshair.active{display:block;}
     .ch-line{position:absolute;background:var(--text);opacity:.6;box-shadow:0 0 2px #0008;}
     .ch-h{width:30px;height:1.5px;top:0;left:-15px;}
-    .ch-v{width:1.5px;height:30px;top:-15px;left:0;}
+    .ch-v{width:1.5px;height:30px;top:0;left:0;}
     .ch-hotspot{
       position:absolute;top:-20px;left:-20px;width:40px;height:40px;border-radius:50%;
       pointer-events:auto;cursor:pointer;background:transparent;transition:background .12s;
@@ -583,32 +584,33 @@
       background-repeat:repeat;
     }
 
-    :root[data-device="mobile"] #sidebar{
-      position:fixed; left:0; right:0; bottom:0; top:auto; width:100%; min-width:0;
-      max-height:75vh; max-height:75dvh; border-left:none; border-top:1px solid var(--border);
-      border-radius:14px 14px 0 0; box-shadow:0 -6px 24px #0008;
-      transform:translateY(calc(100% - 56px)); transition:transform .25s ease;
-      z-index:1300;
+    /* Screenshot mode — hide UI chrome during capture */
+    body.screenshot-mode #sidebar,
+    body.screenshot-mode #searchBox,
+    body.screenshot-mode #rulerPanel,
+    body.screenshot-mode #advancePanel,
+    body.screenshot-mode .floating-panel,
+    body.screenshot-mode .leaflet-control-container,
+    body.screenshot-mode .legend-control {
+      visibility: hidden !important;
     }
-    :root[data-device="mobile"] #sidebar.expanded{ transform:translateY(0); }
-    :root[data-device="mobile"] .sidebar-header{ cursor:pointer; position:relative; padding-right:40px; }
-    :root[data-device="mobile"] .sidebar-header::after{
-      content:''; position:absolute; right:18px; top:50%; width:28px; height:3px;
-      background:var(--sub); border-radius:2px; transform:translateY(-50%);
+    /* Corner label — visible ONLY during screenshot mode */
+    #screenshotCornerLabel {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 9999;
+      display: none;
+      color: #ffffff;
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.85), 0 0 2px rgba(0,0,0,0.9);
+      pointer-events: none;
+      user-select: none;
     }
-    :root[data-device="mobile"] .basemap-toggle-btn{ width:42px; height:42px; }
-    :root[data-device="mobile"] button{ padding:9px 12px; font-size:13px; min-height:38px; }
-    :root[data-device="mobile"] .floating-panel{
-      left:12px; right:12px; top:auto; bottom:80px; width:auto; max-height:60vh;
-    }
-    :root[data-device="mobile"] #rulerPanel{
-      left:12px; right:12px; top:auto; bottom:80px; width:auto;
-    }
-    :root[data-device="mobile"] #searchBox{ width:calc(100vw - 120px); }
-    :root[data-device="mobile"] #advancePanel.advance-in-bar{
-      width:calc(100vw - 24px);
-      bottom:12px;
-    }
+    body.screenshot-mode #screenshotCornerLabel { display: block; }
   </style>
 </head>
 
@@ -619,6 +621,7 @@
   <div id="mapWrap">
     <div id="map"></div>
     <div id="map3d"></div>
+    <div id="screenshotCornerLabel">POLRAD MAPPING</div>
     <div id="crosshair">
       <div class="ch-line ch-h"></div>
       <div class="ch-line ch-v"></div>
@@ -859,7 +862,8 @@
       summaryMonthStart: "Since month start",
       summaryUpdated: "Updated",
       noEdits: "no edits",
-      labelsToggle: "Labels",
+      screenshot: "Screenshot",
+      cities: "Cities captured",
       instructions: {
         polygon: "Click points to trace a shape, then click 'Finish shape'.",
         freehand: "Click and drag on the map to draw freely.",
@@ -881,7 +885,8 @@
         ua_territory: "Ukrainian-controlled territory",
         grayzone: "Gray zone",
         towns: "Town borders (PWM)",
-        forts: "Fortifications (Simple, PMapping832)"
+        forts: "Fortifications (Simple, PMapping832)",
+        cities: "Cities captured"
       },
       locked: "Locked", unlocked: "Unlocked"
     },
@@ -942,7 +947,8 @@
       summaryMonthStart: "С начала месяца",
       summaryUpdated: "Обновлено",
       noEdits: "нет изменений",
-      labelsToggle: "Подписи",
+      screenshot: "Скриншот",
+      cities: "Захваченные города",
       instructions: {
         polygon: "Нажимайте точки, чтобы обвести фигуру, затем нажмите «Завершить фигуру».",
         freehand: "Зажмите кнопку мыши и рисуйте свободно.",
@@ -964,7 +970,8 @@
         ua_territory: "Территория под контролем Украины",
         grayzone: "Серая зона",
         towns: "Границы городов (PWM)",
-        forts: "Укрепления (Simple, PMapping832)"
+        forts: "Укрепления (Simple, PMapping832)",
+        cities: "Захваченные города"
       },
       locked: "Заблокировано", unlocked: "Разблокировано"
     }
@@ -1018,6 +1025,7 @@
 
   /* ===================== MAP ===================== */
   var LIVE_ROOT = 'https://raw.githubusercontent.com/polrad-ma/version/main/';
+  var CITY_ICON_URL = 'https://raw.githubusercontent.com/polrad-ma/uawarmap/refs/heads/main/city-icon.png';
 
   var esriSat = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -1044,11 +1052,11 @@
   );
 
   var baseLayers = {
-    'esriSat':    { label: 'Esri Satellite', layer: esriSat },
     'esriHybrid': { label: 'Esri Hybrid', layer: esriHybrid },
+    'esriSat':    { label: 'Esri Satellite', layer: esriSat },
     'eoxSentinel': { label: 'Sentinel-2 Cloudless', layer: eoxSentinel2 }
   };
-  var currentBasemapKey = 'esriSat';
+  var currentBasemapKey = 'esriHybrid';
 
   var map = L.map('map', {
     center: [48.00, 37.75],
@@ -1067,6 +1075,7 @@
   map.createPane('grayZonePane');  map.getPane('grayZonePane').style.zIndex = 460;
   map.createPane('fortsPane');     map.getPane('fortsPane').style.zIndex = 480;
   map.createPane('townsPane');     map.getPane('townsPane').style.zIndex = 490;
+  map.createPane('citiesPane');    map.getPane('citiesPane').style.zIndex = 620;
   map.createPane('drawingsPane');  map.getPane('drawingsPane').style.zIndex = 650;
   map.createPane('markersPane');   map.getPane('markersPane').style.zIndex = 700;
 
@@ -1275,8 +1284,8 @@
   });
 
   var basemaps3D = {
-    esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     esriHybrid: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    esriSat:    ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
     eoxSentinel: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg']
   };
   var ESRI_LABELS_3D = ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'];
@@ -1323,7 +1332,7 @@
     ['esriImageryLayer', 'esriImageryLayer2'].forEach(function(id){ if (map3DGL.getLayer(id)) map3DGL.removeLayer(id); });
     ['esriImagery', 'esriImagery2'].forEach(function(id){ if (map3DGL.getSource(id)) map3DGL.removeSource(id); });
     var beforeId = map3DGL.getLayer('leafletOverlayLayer') ? 'leafletOverlayLayer' : undefined;
-    var tiles = basemaps3D[key] || basemaps3D.esriSat;
+    var tiles = basemaps3D[key] || basemaps3D.esriHybrid;
     map3DGL.addSource('esriImagery', { type: 'raster', tiles: tiles, tileSize: 256, maxzoom: 19 });
     map3DGL.addLayer({ id: 'esriImageryLayer', type: 'raster', source: 'esriImagery' }, beforeId);
     if (key === 'esriHybrid') {
@@ -1499,6 +1508,21 @@
   map.addControl(new CrosshairToggleControl());
   setCrosshairVisible(crosshairEl.classList.contains('active'));
 
+  // ---- Screenshot control ----
+  var ScreenshotControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
+      btn.title = t('screenshot');
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
+      L.DomEvent.on(btn, 'click', takeScreenshot);
+      L.DomEvent.disableClickPropagation(btn);
+      return btn;
+    }
+  });
+  map.addControl(new ScreenshotControl());
+
   var PHONE_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>';
   var DESKTOP_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="1.5"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
   var DeviceControl = L.Control.extend({
@@ -1528,6 +1552,7 @@
 
   /* ===================== LAYERS ===================== */
   var mainLayers = {};
+  var extraLayers = {};
 
   var layerFiles = [
     {
@@ -1594,6 +1619,68 @@
       weight: 1.8
     }
   ];
+
+  /* ===================== CITIES CAPTURED ===================== */
+  var CAPTURED_CITIES = [
+    { name: "Popasna", date: "7 May 2022", lat: 48.6480, lng: 38.3540 },
+    { name: "Mariupol", date: "20 May 2022", lat: 47.0971, lng: 37.5434 },
+    { name: "Sievierodonetsk", date: "25 June 2022", lat: 48.9483, lng: 38.4931 },
+    { name: "Bilytske", date: "26 July 2026", lat: 48.40687, lng: 37.18220 },
+    { name: "Lysychansk", date: "3 July 2022", lat: 48.9142, lng: 38.4436 },
+    { name: "Enerhodar", date: "28 February 2022", lat: 47.49958, lng: 34.63577 },
+    { name: "Rubizhne", date: "13 May 2022", lat: 49.01986, lng: 38.37936 },
+    { name: "Kreminna", date: "18 April 2022", lat: 49.04783, lng: 38.22925 },
+    { name: "Soledar", date: "16 January 2023", lat: 48.6825, lng: 38.0706 },
+    { name: "Bakhmut (Artyomovsk)", date: "20 May 2023", lat: 48.5956, lng: 37.9999 },
+    { name: "Nova Kakhovka", date: "27 February 2022", lat: 46.75045, lng: 33.34368 },
+    { name: "Tokmak", date: "2 March 2022", lat: 47.25686, lng: 35.70282 },
+    { name: "Vasylivka", date: "2 March 2022", lat: 47.43697, lng: 35.27470 },
+    { name: "Marinka", date: "25 December 2023", lat: 47.94452, lng: 37.50561 },
+    { name: "Avdiivka", date: "17 February 2024", lat: 48.1391, lng: 37.7461 },
+    { name: "Novohrodivka", date: "27 August 2024", lat: 48.20260, lng: 37.33686 },
+    { name: "Krasnohorivka", date: "9 September 2024", lat: 48.00198, lng: 37.51488 },
+    { name: "Henichesk", date: "24 February 2022", lat: 46.17412, lng: 34.80194 },
+    { name: "Hirnyk", date: "26 October 2024", lat: 48.05239, lng: 37.37426 },
+    { name: "Skadovsk", date: "24 February 2022", lat: 46.12465, lng: 32.91229 },
+    { name: "Ukrainsk", date: "17 September 2024", lat: 48.09709, lng: 37.36472 },
+    { name: "Sudzha, Kursk Oblast", date: "13 March 2025", lat: 51.18948, lng: 35.26995 },
+    { name: "Vuhledar", date: "1 October 2024", lat: 47.78064, lng: 37.24726 },
+    { name: "Selydove", date: "30 October 2024", lat: 48.14868, lng: 37.30614 },
+    { name: "Oleshky", date: "24 February 2022", lat: 46.61767, lng: 32.72003 },
+    { name: "Vovchansk", date: "2 December 2025", lat: 50.28737, lng: 36.94050 },
+    { name: "Kamianka-Dniprovska", date: "2 March 2022", lat: 47.49888, lng: 34.38171 },
+    { name: "Kakhovka", date: "24 February 2022", lat: 46.80758, lng: 33.48976 },
+    { name: "Molochansk", date: "26 February 2022", lat: 47.20837, lng: 35.59502 },
+    { name: "Kurakhove", date: "25 December 2024", lat: 47.9850, lng: 37.2831 },
+    { name: "Volnovakha", date: "11 March 2022", lat: 47.60107, lng: 37.48535 },
+    { name: "Polohy", date: "4 March 2022", lat: 47.47823, lng: 36.25265 },
+    { name: "Hola Prystan", date: "27 February 2022", lat: 46.51682, lng: 32.52708 },
+    { name: "Chasiv Yar", date: "28 July 2026", lat: 48.58025, lng: 37.83719 },
+    { name: "Berdyansk", date: "27 February 2022", lat: 46.75774, lng: 36.79871 },
+    { name: "Melitopol", date: "24 February 2022", lat: 46.84610, lng: 35.37186 },
+    { name: "Rodynske", date: "13 July 2026", lat: 48.35351, lng: 37.20760 },
+    { name: "Toretsk", date: "2 February 2025", lat: 48.3917, lng: 37.8728 },
+    { name: "Siversk", date: "13 December 2025", lat: 48.86929, lng: 38.08960 },
+    { name: "Pokrovsk", date: "22 November 2025", lat: 48.2822, lng: 37.1758 },
+    { name: "Myrnohrad", date: "28 December 2025", lat: 48.30843, lng: 37.25670 },
+    { name: "Huliaipole", date: "28 December 2025", lat: 47.6583, lng: 36.2667 }
+  ];
+
+  var cityIcon = L.icon({
+    iconUrl: CITY_ICON_URL,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
+  });
+
+  var cityMarkers = L.layerGroup();
+  CAPTURED_CITIES.forEach(function(city){
+    L.marker([city.lat, city.lng], { icon: cityIcon, pane: 'citiesPane' })
+      .bindPopup('<b>' + city.name + '</b><br>Captured ' + city.date)
+      .addTo(cityMarkers);
+  });
+  cityMarkers.addTo(map);
+  extraLayers['cities'] = cityMarkers;
 
   function fetchGeoJSON(url) {
     var bust = (url.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now();
@@ -1685,6 +1772,94 @@
       row.appendChild(cb);
       row.appendChild(lbl);
       container.appendChild(row);
+    });
+
+    // Cities captured row
+    var cityRow = document.createElement('div');
+    cityRow.className = 'overlay-row';
+    var cityCb = document.createElement('input');
+    cityCb.type = 'checkbox';
+    cityCb.checked = map.hasLayer(cityMarkers);
+    cityCb.addEventListener('change', function(){
+      if (cityCb.checked) { if (!map.hasLayer(cityMarkers)) cityMarkers.addTo(map); }
+      else { if (map.hasLayer(cityMarkers)) map.removeLayer(cityMarkers); }
+    });
+    var cityLbl = document.createElement('label');
+    cityLbl.textContent = t('cities');
+    cityLbl.addEventListener('click', function(){ cityCb.checked = !cityCb.checked; cityCb.dispatchEvent(new Event('change')); });
+    cityRow.appendChild(cityCb);
+    cityRow.appendChild(cityLbl);
+    container.appendChild(cityRow);
+  }
+
+  /* ===================== SCREENSHOT ===================== */
+  function takeScreenshot() {
+    if (typeof html2canvas !== 'function') {
+      alert('Screenshot library not loaded. Check your internet connection.');
+      return;
+    }
+
+    var mapEl = document.getElementById('mapWrap');
+
+    // Enter screenshot mode — hide UI chrome and show corner label
+    document.body.classList.add('screenshot-mode');
+
+    // Give the browser a frame to apply the CSS
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        html2canvas(mapEl, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+          scale: window.devicePixelRatio || 1,
+          logging: false,
+          ignoreElements: function(el){
+            // Ignore Leaflet controls (they're hidden via CSS anyway, but belt-and-suspenders)
+            if (el.classList && el.classList.contains('leaflet-control-container')) return true;
+            return false;
+          }
+        }).then(function(canvas){
+          // Draw the corner label directly onto the canvas (in case CSS
+          // visibility tricks didn't apply in html2canvas's snapshot)
+          var ctx = canvas.getContext('2d');
+          var scale = window.devicePixelRatio || 1;
+          var pad = 16 * scale;
+          var fontSize = 22 * scale;
+          ctx.font = '700 ' + fontSize + 'px Inter, Helvetica, Arial, sans-serif';
+          ctx.textBaseline = 'top';
+          ctx.shadowColor = 'rgba(0,0,0,0.85)';
+          ctx.shadowBlur = 6 * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2 * scale;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText('POLRAD MAPPING', pad, pad);
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+
+          canvas.toBlob(function(blob){
+            if (!blob) { alert('Screenshot failed.'); return; }
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            var date = new Date();
+            var stamp = date.getFullYear() + '-' +
+              String(date.getMonth() + 1).padStart(2, '0') + '-' +
+              String(date.getDate()).padStart(2, '0') + '_' +
+              String(date.getHours()).padStart(2, '0') + '-' +
+              String(date.getMinutes()).padStart(2, '0');
+            a.href = url;
+            a.download = 'polrad-map-' + stamp + '.png';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            document.body.classList.remove('screenshot-mode');
+          }, 'image/png');
+        }).catch(function(err){
+          console.error('Screenshot failed:', err);
+          document.body.classList.remove('screenshot-mode');
+          alert('Screenshot failed. If the map uses cross-origin tiles, some browsers block the capture. Try again or use a different browser.');
+        });
+      });
     });
   }
 
@@ -1873,54 +2048,6 @@
     updateElevLegend(topoRange.min, topoRange.max);
     if (is3DActive) updateOverlayImage();
   });
-
-  /* ---- OpenStreetMap English labels overlay ---- */
-  // This is the standard OSM tile layer with all labels baked in (English).
-  // It sits on top of the satellite base, giving you the "satellite + labels"
-  // combination without any API key.
-  var LABELS_STORAGE_KEY = 'polradLabels_v1';
-  var labelsEnabled = true;
-  try { labelsEnabled = localStorage.getItem(LABELS_STORAGE_KEY) !== '0'; } catch (e) {}
-
-  // We use the standard OSM raster tiles as the label overlay.
-  // The tiles have transparent backgrounds where there's no label content.
-  var osmLabelsOverlay = L.tileLayer(
-    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-      opacity: 1
-    }
-  );
-
-  function setLabelsEnabled(on) {
-    labelsEnabled = !!on;
-    try { localStorage.setItem(LABELS_STORAGE_KEY, labelsEnabled ? '1' : '0'); } catch (e) {}
-    var btn = document.getElementById('btnLabelsToggle');
-    if (btn) btn.classList.toggle('active-toggle', labelsEnabled);
-    if (labelsEnabled) {
-      if (!map.hasLayer(osmLabelsOverlay)) osmLabelsOverlay.addTo(map);
-    } else {
-      if (map.hasLayer(osmLabelsOverlay)) map.removeLayer(osmLabelsOverlay);
-    }
-  }
-
-  var LabelsControl = L.Control.extend({
-    options: { position: 'topright' },
-    onAdd: function() {
-      var btn = L.DomUtil.create('div', 'basemap-toggle-btn');
-      btn.id = 'btnLabelsToggle';
-      btn.title = t('labelsToggle');
-      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h6"/></svg>';
-      L.DomEvent.on(btn, 'click', L.DomEvent.stop);
-      L.DomEvent.on(btn, 'click', function(){
-        setLabelsEnabled(!labelsEnabled);
-      });
-      L.DomEvent.disableClickPropagation(btn);
-      return btn;
-    }
-  });
-  map.addControl(new LabelsControl());
 
   /* ===================== ADVANCES + SUMMARY ===================== */
   var ADVANCES_URL = LIVE_ROOT + 'advances.json';
@@ -2666,7 +2793,6 @@
 
   /* ===================== BOOT ===================== */
   applyLanguage();
-  setLabelsEnabled(labelsEnabled);
 
 </script>
 
