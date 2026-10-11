@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://server.arcgisonline.com">
   <link rel="preconnect" href="https://tiles.maps.eox.at">
   <link rel="preconnect" href="https://raw.githubusercontent.com">
+  <link rel="preconnect" href="https://pics.clipartpng.com">
   <link rel="preconnect" href="https://s3.amazonaws.com">
 
   <script>
@@ -584,7 +585,6 @@
       background-repeat:repeat;
     }
 
-    /* Screenshot mode — hide UI chrome during capture */
     body.screenshot-mode #sidebar,
     body.screenshot-mode #searchBox,
     body.screenshot-mode #rulerPanel,
@@ -890,6 +890,7 @@
       noEdits: "no edits",
       screenshot: "Screenshot",
       cities: "Cities captured",
+      removeSearch: "Remove",
       instructions: {
         polygon: "Click points to trace a shape, then click 'Finish shape'.",
         freehand: "Click and drag on the map to draw freely.",
@@ -975,6 +976,7 @@
       noEdits: "нет изменений",
       screenshot: "Скриншот",
       cities: "Захваченные города",
+      removeSearch: "Удалить",
       instructions: {
         polygon: "Нажимайте точки, чтобы обвести фигуру, затем нажмите «Завершить фигуру».",
         freehand: "Зажмите кнопку мыши и рисуйте свободно.",
@@ -1534,7 +1536,6 @@
   map.addControl(new CrosshairToggleControl());
   setCrosshairVisible(crosshairEl.classList.contains('active'));
 
-  // ---- Screenshot control ----
   var ScreenshotControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function() {
@@ -1704,7 +1705,6 @@
       .bindPopup('<b>' + city.name + '</b><br>Captured ' + city.date)
       .addTo(cityMarkers);
   });
-  // Not added to the map — cities are off by default. Toggle in the Layers section.
   extraLayers['cities'] = cityMarkers;
 
   function fetchGeoJSON(url) {
@@ -1799,7 +1799,6 @@
       container.appendChild(row);
     });
 
-    // Cities captured row
     var cityRow = document.createElement('div');
     cityRow.className = 'overlay-row';
     var cityCb = document.createElement('input');
@@ -2480,13 +2479,19 @@
     var removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'coords-copy-btn';
-    removeBtn.textContent = 'Remove';
-    removeBtn.onclick = clearSearchMarker;
+    removeBtn.textContent = t('removeSearch');
+    // Only the Remove button deletes the marker. The × only closes the popup.
+    removeBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      clearSearchMarker();
+    });
     content.appendChild(removeBtn);
     searchMarker = L.marker([lat, lng]).addTo(map)
-      .bindPopup(content, { closeOnClick: false, autoClose: false })
+      .bindPopup(content, { closeOnClick: false, autoClose: false, closeButton: true })
       .openPopup();
-    searchMarker.on('popupclose', clearSearchMarker);
+    // Deliberately NOT binding popupclose -> clearSearchMarker: the × should
+    // only close the popup, leaving the marker on the map so it can be
+    // reopened later and removed via the Remove button.
     searchResultsEl.style.display = 'none';
   }
   function renderSearchResults(items) {
@@ -2733,11 +2738,11 @@
   });
 
   var ukraineFlagIcon = L.icon({
-    iconUrl: 'https://pics.clipartpng.com/midle/Ukraine_Flag_PNG_Clip_Art-1811.png',
+    iconUrl: 'https://pics.clipartpng.com/Ukraine_Flag_PNG_Clip_Art-1811.png',
     iconSize: [32, 21], iconAnchor: [16, 21], popupAnchor: [0, -21]
   });
   var russiaFlagIcon = L.icon({
-    iconUrl: 'https://pics.clipartpng.com/midle/Russia_Flag_PNG_Clip_Art-1857.png',
+    iconUrl: 'https://pics.clipartpng.com/Russia_Flag_PNG_Clip_Art-1857.png',
     iconSize: [32, 21], iconAnchor: [16, 21], popupAnchor: [0, -21]
   });
 
