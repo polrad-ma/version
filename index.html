@@ -2737,14 +2737,28 @@
     }
   });
 
-  var ukraineFlagIcon = L.icon({
-    iconUrl: 'https://pics.clipartpng.com/Ukraine_Flag_PNG_Clip_Art-1811.png',
-    iconSize: [32, 21], iconAnchor: [16, 21], popupAnchor: [0, -21]
-  });
-  var russiaFlagIcon = L.icon({
-    iconUrl: 'https://pics.clipartpng.com/Russia_Flag_PNG_Clip_Art-1857.png',
-    iconSize: [32, 21], iconAnchor: [16, 21], popupAnchor: [0, -21]
-  });
+ var ukraineFlagIcon = L.icon({
+  iconUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="21" viewBox="0 0 32 21">' +
+      '<rect x="0" y="0" width="32" height="10.5" fill="#0057b7"/>' +
+      '<rect x="0" y="10.5" width="32" height="10.5" fill="#ffd700"/>' +
+      '<rect x="0.5" y="0.5" width="31" height="20" fill="none" stroke="#00000080" stroke-width="1"/>' +
+    '</svg>'
+  ),
+  iconSize: [32, 21], iconAnchor: [16, 21], popupAnchor: [0, -21]
+});
+
+var russiaFlagIcon = L.icon({
+  iconUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="21" viewBox="0 0 32 21">' +
+      '<rect x="0" y="0" width="32" height="7" fill="#ffffff"/>' +
+      '<rect x="0" y="7" width="32" height="7" fill="#0039a6"/>' +
+      '<rect x="0" y="14" width="32" height="7" fill="#d52b1e"/>' +
+      '<rect x="0.5" y="0.5" width="31" height="20" fill="none" stroke="#00000080" stroke-width="1"/>' +
+    '</svg>'
+  ),
+  iconSize: [32, 21], iconAnchor: [16, 21], popupAnchor: [0, -21]
+});
 
   function addArrow(start, end, color, weight, isDashed) {
     var group = L.layerGroup();
